@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Go Shopping</title>
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <script type="text/javascript" src='~/Content/scripts/catalog-v1.0.2.js'></script>
+    <style>
+    </style>
+</head>
+    <body style="margin:0; height:100%;">
+        <script type="text/javascript">
+			var apiKey = 'apikey-12345-key';
+			var catalogSdk = new Catalog(apiKey, false);
+			var cart;
+
+			window.onload = function(e){ 
+                // Get Vehicle info from querystring
+				var vehicle = catalogSdk.vehicle;
+
+                // Simply show the json representation
+				var vehicleOutput = document.getElementById('vehicleOutput');
+				vehicleOutput.innerHTML = JSON.stringify(vehicle);
+
+                // Add some hard coded items to a cart array
+				var noteItem1 = catalogSdk.createNoteItem("NOTE1");
+				var noteItem2 = catalogSdk.createNoteItem("NOTE2");
+				var laborItem1 = catalogSdk.createLaborItem("LABOR1", 1.4, 240);
+				var partItem1 = catalogSdk.createPartItem('PART1', "BFG", "BFG", "PART1", 1.0, 2.0, 0, 2, false, "SIZE", "upccode");
+			    var partItem2 = catalogSdk.createPartItem('PART2', "BFG", "BFG", "PART2", 1.0, 2.0, 0, 2, true, "SIZE", "upccode");
+				
+				// Using this newer API allows Manager to correctly assign tire/wheel parts the tire category. But can be used for any type of part as well
+			    var tire = catalogSdk.createPartItem2('TIRE1', "BFG", "BFG", "TIRE1", 1.0, 2.0, 0, 2, "S1", "upccode", catalogSdk.PartCategory.TIRE);
+			    var wheel = catalogSdk.createPartItem2('WHEEL1', "BFG", "BFG", "WHEEL1", 1.0, 2.0, 0, 2, "S2", "upccode", catalogSdk.PartCategory.WHEEL);
+			    var partItem3 = catalogSdk.createPartItem2('PART3', "BFG", "BFG", "PART3", 1.0, 2.0, 0, 2, "S3", "upccode", catalogSdk.PartCategory.UNSPECIFIED);
+
+			    var orderItem1 = catalogSdk.createOrderItem("OrderMessage", "DeliveryOptions", "ConfirmationNumber1", "Tracking#");
+
+				// Previous version - no tire/wheel support
+			    catalogSdk.addOrderPart(orderItem1, "5", "San Diego", "back ordered", "NONTIRE", "BFG", "BFG", "NONTIRE", 1.0, 2.0, 0, 1, 1, 1);
+				
+				// New version with tire/wheel/other support.
+			    catalogSdk.addOrderPart2(orderItem1, "5", "San Diego", "back ordered", "TIRE2", "BFG", "BFG", "TIRE2", 1.0, 2.0, 0, 1, 1, 1, "255/S/65R", catalogSdk.PartCategory.TIRE);
+			    catalogSdk.addOrderPart2(orderItem1, "5", "San Diego", "back ordered", "WHEEL2", "BFG", "BFG", "WHEEL2", 1.0, 2.0, 0, 1, 1, 1, "15in", catalogSdk.PartCategory.WHEEL);
+                catalogSdk.addOrderPart2(orderItem1, "5", "San Diego", "back ordered", "NONTIRE2", "BFG", "BFG", "NONTIRE2", 1.0, 2.0, 0, 1, 1, 1, "", catalogSdk.PartCategory.UNSPECIFIED);
+
+                // Previous call - with tracking omitted
+                var orderItem2 = catalogSdk.createOrderItem("OrderMessage2", "DeliveryOptions", "ConfirmationNumber2");
+                catalogSdk.addOrderPart2(orderItem2, "5", "San Diego", "back ordered", "TIRE2", "BFG", "BFG", "TIRE2", 1.0, 2.0, 0, 1, 1, 1, "255/S/65R", catalogSdk.PartCategory.TIRE);
+			    
+			    cart = [
+			        noteItem1,
+			        noteItem2,
+			        laborItem1,
+			        partItem1,
+			        partItem2,
+					tire,
+					wheel,
+			        partItem3,
+                    orderItem1,
+			        orderItem2
+			    ];
+
+			    populateDropDown(cart);
+			}
+
+			function TransferClicked() {
+			    // Cart would be converted from any internal catalog representation to part/note/labor/order (with parts) at this point and transferred back to caller
+                // In this example, cart is static and already created above
+				catalogSdk.transferParts(cart);
+            }
+			
+			function CancelClicked() {
+                catalogSdk.cancelRequest();
+			}
+
+			function populateDropDown(cart) {
+			    var x = document.getElementById("cartSelect");
+
+			    for (var c = 0; c < cart.length; c++) {
+			        var option = document.createElement("option");
+			        
+			        switch(cart[c].type) {
+			        case "INoteItem":
+			            option.text = "Note Item";
+			            break;
+			        case "IPartItem2":
+			            option.text = "Part Item";
+			            break;
+			        case "ILaborItem":
+			            option.text = "Labor Item";
+			            break;    
+			        case "IOrder":
+			            option.text = "Order: " + cart[c].Parts.length + " items";
+			            break;
+			        default:
+			            option.text = "Unknown Item type: " + (cart[c].type == null ? "<null>" : "");
+			        }
+			        x.add(option);
+			    }
+			}
+        </script>
+
+		Go Shopping:
+    <form>
+        Cart Contains:
+        <select id="cartSelect" name="cart">
+        </select>
+		
+        <input type='button' onclick='CancelClicked();' value='Close'/>
+        <input type='button' onclick='TransferClicked();' value='Transfer'/>
+    </form>
+    
+    <div>
+        <p>
+            Vehicle:
+            <pre id="vehicleOutput">
+            </pre>
+        </p>
+    </div>
+    </body>
+</html>

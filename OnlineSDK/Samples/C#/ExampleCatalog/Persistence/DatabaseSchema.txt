@@ -1,0 +1,17 @@
+﻿CREATE TABLE orders (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	ordered_date INTEGER NOT NULL,
+	manager_po TEXT NULL,
+	customer_id INTEGER NOT NULL,
+	vehicle_json TEXT NULL
+);
+
+CREATE TABLE order_tracking (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	order_id INTEGER NOT NULL,
+	expected_arrival_date INTEGER NOT NULL
+);
+
+-- Add some fake starting points
+INSERT INTO orders (id, ordered_date, manager_po, customer_id, vehicle_json) VALUES (54000, 0, '', -1, NULL);
+INSERT INTO order_tracking (id, order_id, expected_arrival_date) VALUES (89000, -1, 0);

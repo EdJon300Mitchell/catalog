@@ -1,0 +1,3378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: Catalog</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: Catalog</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2><span class="attribs"><span class="type-signature"></span></span>Catalog<span class="signature">(apiKey, isSetupMode)</span><span class="type-signature"></span></h2>
+        
+            <div class="class-description">JavaScript entry Point into Online Catalog integration with ManagerSE. Use this class in your "Vendor Setup"and "Go Shopping" Web pages.</div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+    <h2>Constructor</h2>
+    
+
+    
+    <h4 class="name" id="Catalog"><span class="type-signature"></span>new Catalog<span class="signature">(apiKey, isSetupMode)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Create Catalog integration instance. You must only create one of these. Recomended to create this early in page life cycle in case you needto use JavaScript debugger.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>apiKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Pass in Vendor Identifier (will be assigned by Mitchell1)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isSetupMode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">True: if this is being used in Vendor Setup. False: if used in Go Shopping sessions. Changes the behavior of saveConfiguration</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line13">line 13</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="PartCategory"><span class="type-signature"></span>PartCategory<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Pass one of these constants for methods taking a PartsCategory
+</div>
+
+
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>UNSPECIFIED</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">General Part</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>TIRE</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Tires will get part category user has assigned for Tires & Wheels, and marked IsTire=true in Manager</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>WHEEL</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Wheels will get part category user has assigned for Tires & Wheels, but will have IsTire=false in Manager</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line25">line 25</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li><a href="Catalog.html#createPartItem2">Catalog#createPartItem2</a></li>
+        
+            <li><a href="Catalog.html#addOrderPart2">Catalog#addOrderPart2</a></li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="qualifier"><span class="type-signature"></span>qualifier<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Get any previously saved Vendor Qualifier (reads from Query string). Vendor Qualifier is saved from Vendor Setup, this is where stored data identifying shop customer is retrieved
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line50">line 50</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="vehicle"><span class="type-signature"></span>vehicle<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Returns the Vehicle (if any) that was selected on Shop Management System's repair order (only populated within Go Shopping session)
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line87">line 87</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li><a href="IVehicle.html">IVehicle</a></li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="addOrderPart"><span class="type-signature"></span>addOrderPart<span class="signature">(orderItem, locationId, locationName, status, partNumber, manufacturerLineCode, manufacturerName, description, unitList, unitCost, unitCore, quantityRequested, quantityOrdered, quantityAvailable)</span><span class="type-signature"> &rarr; {<a href="IOrderPart.html">IOrderPart</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Must have created an IOrder object using factory method. Then you can use this to insert an ordered part into the purchased order
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>orderItem</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Order created via createOrderItem</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>locationId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Identifier for location part is from</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>locationName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Name for location part is from</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>status</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Order status</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Part Number</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerLineCode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Manufacturer line code - required</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Manufacturer Name</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>description</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Description of part</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCost</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Cose</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCore</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Any Core Amount</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantityRequested</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Typically, qty requested = qty ordered = qty available. However, you can return different values.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantityOrdered</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Actual qty of parts successfully ordered</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantityAvailable</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Available qty</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>Prefer using addOrderPart2</li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line251">line 251</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li><a href="Catalog.html#addOrderPart2">Catalog#addOrderPart2</a></li>
+        
+            <li><a href="Catalog.html#createOrderItem">Catalog#createOrderItem</a></li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="IOrderPart.html">IOrderPart</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="addOrderPart2"><span class="type-signature"></span>addOrderPart2<span class="signature">(orderItem, locationId, locationName, status, partNumber, manufacturerLineCode, manufacturerName, description, unitList, unitCost, unitCore, quantityRequested, quantityOrdered, quantityAvailable, size, partCategory)</span><span class="type-signature"> &rarr; {<a href="ICartOrderedPart.html">ICartOrderedPart</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Must have created an IOrder object using factory method. Then you can use this to insert an ordered part into the purchased order
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>orderItem</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Order created via createOrderItem</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>locationId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Identifier for location part is from</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>locationName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Name for location part is from</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>status</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Order status</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Part Number</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerLineCode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Manufacturer line code - required</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Manufacturer Name</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>description</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Description of part</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCost</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Cose</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCore</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Any Core Amount</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantityRequested</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Typically, qty requested = qty ordered = qty available. However, you can return different values.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantityOrdered</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Actual qty of parts successfully ordered</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantityAvailable</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Available qty</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>size</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Part Size (e.g. Tire Size)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partCategory</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">PartCategory</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Type of part</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line276">line 276</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li><a href="Catalog.html#createOrderItem">Catalog#createOrderItem</a></li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="ICartOrderedPart.html">ICartOrderedPart</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cancelRequest"><span class="type-signature"></span>cancelRequest<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Cancels the current operation. Will close the broser window  - nothing will be saved or transferred
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line55">line 55</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="createLaborItem"><span class="type-signature"></span>createLaborItem<span class="signature">(description, hours, price)</span><span class="type-signature"> &rarr; {<a href="ILaborItem.html">ILaborItem</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    A labor item you can create and add to your cart array
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>description</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Desription of labor</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>hours</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Hours of labor</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>price</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Price of labor</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line204">line 204</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="ILaborItem.html">ILaborItem</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="createNoteItem"><span class="type-signature"></span>createNoteItem<span class="signature">(note)</span><span class="type-signature"> &rarr; {<a href="INoteItem.html">INoteItem</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    A note item you can create and add to your cart array
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>note</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Note text to create</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line193">line 193</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="INoteItem.html">INoteItem</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="createOrderItem"><span class="type-signature"></span>createOrderItem<span class="signature">(orderMessage, deliveryOptions, confirmationNumber, trackingNumber)</span><span class="type-signature"> &rarr; {<a href="IOrder.html">IOrder</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Typically parts are simply transferred and ordered later. However, if your catalog is placing orders directly within the Go Shopping session, use this method to record that purchaseback to Manager. Add in parts using addOrderPart2
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>orderMessage</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A message for order</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>deliveryOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Delivery method</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>confirmationNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Purchase Order/Confirmation Number</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>trackingNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">(Optional | Max 20 Chars) If provided, allows for tracking order shipping/tracking in Manager app. This field will be ignore in Manager releases < 8.2.1</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line219">line 219</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li><a href="Catalog.html#addOrderPart2">Catalog#addOrderPart2</a></li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="IOrder.html">IOrder</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="createPartItem"><span class="type-signature"></span>createPartItem<span class="signature">(partNumber, manufacturerLineCode, manufacturerName, description, unitList, unitCost, unitCore, quantity, isTire, size, upcCode)</span><span class="type-signature"> &rarr; {<a href="IPartItem3.html">IPartItem3</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    See spec of Catalog SDK: IPartItem3 (versions of Manager prior to 8.1 will not recognize extended attribute PartCategory)When adding multiples of the same part, pass correct quantity member, do not call createPartItem( ) multiple times for same part
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>partNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Part Number</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerLineCode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Line Code - must not be blank</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Manufacturer name</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>description</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Description of part</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCost</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Cost</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCore</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Core</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Quantity transferred.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isTire</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">True for IsTire</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>size</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Tire Size, or other size information</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>upcCode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Not currently persisted in Shop Management System</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line146">line 146</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="IPartItem3.html">IPartItem3</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="createPartItem2"><span class="type-signature"></span>createPartItem2<span class="signature">(partNumber, manufacturerLineCode, manufacturerName, description, unitList, unitCost, unitCore, quantity, size, upcCode, partCategory)</span><span class="type-signature"> &rarr; {<a href="IPartItem3.html">IPartItem3</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    See spec of Catalog SDK: IPartItem3 (versions of Manager prior to 8.1 will not recognize extended attribute PartCategory)When adding multiples of the same part, pass correct quantity member, do not call createPartItem2( ) multiple times for same part
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>partNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Part Number</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerLineCode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Line Code - must not be blank</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>manufacturerName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Manufacturer name</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>description</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Description of part</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">List</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCost</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Cost</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>unitCore</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Core</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>quantity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Quantity transferred.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>size</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Tire Size, or other size information</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>upcCode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Not currently persisted in Shop Management System</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partCategory</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">PartCategory</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Type of part</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line180">line 180</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="IPartItem3.html">IPartItem3</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getUrlParameterByName"><span class="type-signature"></span>getUrlParameterByName<span class="signature">(name, url)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Helper method to get a Query string parameter from URL
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Query Param Name</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>url</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">URL to parse. If not provided, will use URL from window.location.href</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line117">line 117</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Returns found query param, or null
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="saveConfiguration"><span class="type-signature"></span>saveConfiguration<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Only supported in isSetupMode=true - for Vendor setup, used to save the vendor qualifier information and close the browser window
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line60">line 60</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="transferParts"><span class="type-signature"></span>transferParts<span class="signature">(cart)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Only supported in isSetupMode=false - for Go Shopping session, used to transfer items in the cart and close the browser window
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cart</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;<a href="IPartItem3.html">IPartItem3</a>, <a href="INoteItem.html">INoteItem</a>, <a href="INoteItem.html">INoteItem</a>, <a href="IOrder.html">IOrder</a>></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Array of items to transfer to Manager. Note, IOrder contains its own list of part items. Do not add those ordered parts to the cart directly</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="catalog-v1.0.2.js.html">catalog-v1.0.2.js</a>, <a href="catalog-v1.0.2.js.html#line73">line 73</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Catalog.html">Catalog</a></li><li><a href="ICartOrderedPart.html">ICartOrderedPart</a></li><li><a href="ILaborItem.html">ILaborItem</a></li><li><a href="INoteItem.html">INoteItem</a></li><li><a href="IOrder.html">IOrder</a></li><li><a href="IOrderPart.html">IOrderPart</a></li><li><a href="IPartItem3.html">IPartItem3</a></li><li><a href="IVehicle.html">IVehicle</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.4</a> on Thu Apr 30 2020 12:57:16 GMT-0700 (Pacific Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
