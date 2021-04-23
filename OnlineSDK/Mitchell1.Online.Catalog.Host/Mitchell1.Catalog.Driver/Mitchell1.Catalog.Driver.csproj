@@ -56,7 +56,14 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\Mitchell1.Online.Catalog.Host\OnlineCatalogKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mitchell1.Browser.Interfaces">
       <HintPath>..\..\..\bin\Browser\Mitchell1.Browser.Interfaces.dll</HintPath>
       <Private>False</Private>
@@ -135,7 +142,6 @@
     <Compile Include="Data\DriverData.cs" />
     <Compile Include="Helpers\ExternalCatalogAdapterErrorHandler.cs" />
     <Compile Include="Helpers\HostData.cs" />
-    <Compile Include="Helpers\Location.cs" />
     <Compile Include="Helpers\Order.cs" />
     <Compile Include="Helpers\Part.cs" />
     <Compile Include="Helpers\PriceCheck.cs" />
@@ -191,6 +197,9 @@
     <Content Include="Resources\Mitchell1.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Mitchell1.Online.Catalog.Host\OnlineCatalogKey.snk">
+      <Link>OnlineCatalogKey.snk</Link>
+    </None>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -8,7 +9,6 @@ using System.Windows.Forms;
 using Mitchell1.Catalog.Framework.Common;
 using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host.API;
-using Mitchell1.Online.Catalog.Host.Orders;
 using Mitchell1.Online.Catalog.Host.TransferObjects;
 
 namespace Mitchell1.Online.Catalog.Host
@@ -16,12 +16,14 @@ namespace Mitchell1.Online.Catalog.Host
 	public class OnlineCatalog : IOnlineCatalog
 	{
         private readonly OnlineCatalogInformation onlineCatalogInformation;
+        private readonly ShowCatalogWaitForm showCatalogWaitForm;
         private readonly IVehicle vehicle;
         private readonly IVendor vendor;
         private readonly IHostData hostData;
+        private readonly NewCatalogHostingForm newCatalogHostingForm;
         private readonly Logger logger;
 
-		public OnlineCatalog(OnlineCatalogInformation onlineCatalogInformation, IVendor vendor, IVehicle vehicle, IHostData hostData)
+		public OnlineCatalog(OnlineCatalogInformation onlineCatalogInformation, IVendor vendor, IVehicle vehicle, IHostData hostData, NewCatalogHostingForm newCatalogHostingForm = null)
         {
 			if (onlineCatalogInformation == null)
                 throw new ArgumentNullException(nameof(onlineCatalogInformation));
@@ -29,28 +31,20 @@ namespace Mitchell1.Online.Catalog.Host
             logger = new Logger(onlineCatalogInformation.DisplayName);
 
 			this.onlineCatalogInformation = onlineCatalogInformation;
+			showCatalogWaitForm = new ShowCatalogWaitForm(onlineCatalogInformation);
             this.vendor = vendor;
             this.vehicle = vehicle;
             this.hostData = hostData;
+            this.newCatalogHostingForm = newCatalogHostingForm ?? CatalogHostingForm.New;
         }
+
+		public bool ShowsDeliverWillCall => onlineCatalogInformation.ShowsDeliverWillCall;
 
         public bool AllowsBlankManufacturerCode => onlineCatalogInformation.AllowsBlankManufacturerCode;
 
 	    public bool AllowsNotFoundPartsToBeOrdered => onlineCatalogInformation.AllowsNotFoundPartsToBeOrdered;
 
-	    public IDeliveryMethod DeliveryMethod => onlineCatalogInformation.DeliveryMethod;
-
 	    public bool SupportsOrderTracking => !string.IsNullOrWhiteSpace(onlineCatalogInformation[CatalogApiPart.OrderTracking]);
-
-		/// <summary>
-		/// We need to control UI - to show any error messages on UI thread - cannot be delegated to background worker thread if Manager controls UI
-		/// </summary>
-		public bool HostShowsProgressOnOrder => false;
-        
-		/// <summary>
-        /// We need to control UI - to show any error messages on UI thread - cannot be delegated to background worker thread if Manager controls UI
-        /// </summary>
-		public bool HostShowsProgressOnPriceCheck => false;
 
         public bool RequiresPriceCheck => onlineCatalogInformation.RequiresPriceCheck;
 
@@ -64,57 +58,45 @@ namespace Mitchell1.Online.Catalog.Host
 
         public bool SupportsPriceCheck => onlineCatalogInformation.SupportsPriceCheck;
 
-		public bool GoShopping(ICart cart) => throw new NotImplementedException($"This method is deprecated - use {nameof(IOnlineCatalog)}.{nameof(IOnlineCatalog.GoShopping)}");
-		void ICatalog.OrderParts(IOrder order) => throw new NotImplementedException($"This method is deprecated - use {nameof(IOnlineCatalog)}.{nameof(IOnlineCatalog.OrderParts)}");
-
 		public bool GoShopping(out ShoppingCart cart)
 		{
-			cart = new ShoppingCart();
-
-			using (var hostingForm = new GoShoppingForm())
-            {
-                hostingForm.LoadOnlineCatalog(onlineCatalogInformation, cart, vendor, hostData, vehicle);
-                if (hostingForm.ShowDialog() == DialogResult.OK)
-                    return !cart.IsEmpty;
-
-                if (hostingForm.HttpResponseCode == 403)
-                    throw new CatalogAuthenticationException();
-
-                return false;
-            }
-        }
-
-        public void PriceCheck(IPriceCheck priceCheck)
-        {
-            MakeWebCallWithErrorHandling(async delegate (CancellationToken token)
-			{ 
-				using (var controller = OnlineCatalogCommunicationFactory.GetRestApiController(onlineCatalogInformation))
-                {
-                    await controller.PriceCheck(hostData, vendor, priceCheck, vehicle, logger, token);
-                }
-            }, "Price Check");
-		}
-
-		public OrderResponse OrderParts(OrderRequest order)
-		{
-			OrderResponse orderResponse = null;
-			MakeWebCallWithErrorHandling(async delegate (CancellationToken token)
+			var catalogController = OnlineCatalogCommunicationFactory.GetEmbeddedCatalogTransferController(onlineCatalogInformation, vendor, hostData, vehicle);
+			using (var hostingForm = newCatalogHostingForm(onlineCatalogInformation, catalogController))
 			{
-				using (var controller = OnlineCatalogCommunicationFactory.GetRestApiController(onlineCatalogInformation))
+				hostingForm.ClientSize = new System.Drawing.Size(875, 577);
+				hostingForm.WindowState = FormWindowState.Maximized;
+				if (hostingForm.ShowWebPage())
 				{
-					orderResponse = await controller.OrderParts(hostData, vendor, order, vehicle, logger, token);
+					cart = catalogController.Cart;
+					return cart != null && cart.Count != 0;
 				}
 
-			}, "Order");
-
-			return orderResponse;
+				cart = new ShoppingCart();
+				return false;
+			}
 		}
 
-		public async Task<TrackingRequestResponse> RequestOrderTrackingAsync(string orderTrackingId, CancellationToken cancellationToken)
+        public bool PriceCheck(IExtendedPriceCheck priceCheck)
+        {
+			using (var controller = OnlineCatalogCommunicationFactory.GetRestApiController(onlineCatalogInformation, logger, newCatalogHostingForm))
+            {
+				return controller.PriceCheck(hostData, vendor, priceCheck, vehicle);
+			}
+        }
+
+		public bool OrderParts(IExtendedOrder order)
 		{
-			using (var controller = OnlineCatalogCommunicationFactory.GetRestApiController(onlineCatalogInformation))
+			using (var controller = OnlineCatalogCommunicationFactory.GetRestApiController(onlineCatalogInformation, logger, newCatalogHostingForm))
 			{
-				var tracking =  await controller.GetOrderTracking(hostData, vendor, orderTrackingId, logger, cancellationToken);
+				return controller.OrderParts(hostData, vendor, order, vehicle);
+			}
+		}
+
+		public async Task<TrackingResponse> RequestOrderTrackingAsync(string orderTrackingId, CancellationToken cancellationToken)
+		{
+			using (var controller = OnlineCatalogCommunicationFactory.GetRestApiController(onlineCatalogInformation, logger, newCatalogHostingForm))
+			{
+				var tracking =  await controller.GetOrderTracking(hostData, vendor, orderTrackingId, cancellationToken);
 				if (tracking.ExternalTrackingUrl != null)
 				{
 					var scheme = tracking.ExternalTrackingUrl.Scheme;
@@ -127,63 +109,12 @@ namespace Mitchell1.Online.Catalog.Host
 			}
 		}
 
-		public TrackingRequestResponse RequestOrderTracking(string orderTrackingId)
+		public TrackingResponse RequestOrderTracking(string orderTrackingId)
 		{
 			if (!SupportsOrderTracking)
 				throw new CatalogConfigurationException("Catalog does not support tracking");
 
-			TrackingRequestResponse tracking = null;
-			MakeWebCallWithErrorHandling(async delegate (CancellationToken token)
-			{
-				tracking = await RequestOrderTrackingAsync(orderTrackingId, token);
-			}, "Order Tracking");
-
-			return tracking;
-		}
-
-		private void MakeWebCallWithErrorHandling(Func<CancellationToken, Task> action, string taskName)
-        {
-	        using (var form = new CatalogWaitForm())
-	        {
-		        form.DetailMessage = taskName;
-		        form.Action = action;
-		        form.ShowDialog();
-
-		        switch (form.Error)
-		        {
-			        case null:
-				        return;
-					case HttpRequestException ex:
-						var innerException = ex.InnerException as WebException;
-						var message = innerException?.Message ?? ex.GetBaseException().Message;
-						var status = innerException?.Status ?? WebExceptionStatus.UnknownError;
-						message = $"Please check your Internet connectivity - unable to reach {taskName} for '{onlineCatalogInformation.DisplayName}'. If this error persists, please contact technical support.\r\n\r\nOperating System Reports: ({status}) {message}";
-
-						var apiException = new ApiCallException(message, ApiCallException.ContentType.Text, HttpStatusCode.InternalServerError, status.ToString());
-						HandleCatalogApiErrorDisplay(apiException, taskName);
-						break;
-					case ApiCallException ex:
-					{
-						HandleCatalogApiErrorDisplay(ex, taskName);
-						break;
-						}
-			        default:
-				        throw form.Error;
-		        }
-	        }
-        }
-
-        private void HandleCatalogApiErrorDisplay(ApiCallException ex, string taskName)
-        {
-	        using (var errorForm = new CatalogErrorForm(onlineCatalogInformation, ex))
-	        {
-		        errorForm.ShowDialog();
-	        }
-
-	        // We want to suppress error UI on Manager - however, still want call to abort - updated manager will suppress this error - we have already handled the error
-	        var message = $"Catalog '{onlineCatalogInformation.DisplayName}': Operation '{taskName}' failed with: {ex.StatusCode}:{ex.Reason ?? "Unknown Error"}. {ex.Message}";
-	        Trace.WriteLine(message);
-	        throw new OperationCanceledException(message, ex);
+			return showCatalogWaitForm.MakeWebCallWithErrorHandling(async token => await RequestOrderTrackingAsync(orderTrackingId, token), "Order Tracking");
 		}
 
 		public void ShowDetailExceptionMessageBox(ApiCallException exception, string title)
@@ -195,6 +126,53 @@ namespace Mitchell1.Online.Catalog.Host
 
 				errorForm.ShowDialog();
 			}
+		}
+	}
+
+	internal class ShowCatalogWaitForm
+	{
+		private readonly OnlineCatalogInformation onlineCatalogInformation;
+
+		public ShowCatalogWaitForm(OnlineCatalogInformation onlineCatalogInformation) => this.onlineCatalogInformation = onlineCatalogInformation;
+
+		public T MakeWebCallWithErrorHandling<T>(Func<CancellationToken, Task<T>> func, string taskName)
+		{
+			using (var form = new CatalogWaitForm())
+			{
+				form.DetailMessage = taskName;
+				var result = form.GetResponse(func);
+
+				switch (form.Error)
+				{
+					case null:
+						return result;
+					case HttpRequestException ex:
+						var innerException = ex.InnerException as WebException;
+						var message = innerException?.Message ?? ex.GetBaseException().Message;
+						var status = innerException?.Status ?? WebExceptionStatus.UnknownError;
+						message = $"Please check your Internet connectivity - unable to reach {taskName} for '{onlineCatalogInformation.DisplayName}'. If this error persists, please contact technical support.\r\n\r\nOperating System Reports: ({status}) {message}";
+
+						var apiException = new ApiCallException(message, ApiCallException.ContentType.Text, HttpStatusCode.InternalServerError, status.ToString());
+						throw HandleCatalogApiErrorDisplay(apiException, taskName);
+					case ApiCallException ex:
+						throw HandleCatalogApiErrorDisplay(ex, taskName);
+					default:
+						throw form.Error;
+				}
+			}
+		}
+
+		private OperationCanceledException HandleCatalogApiErrorDisplay(ApiCallException ex, string taskName)
+		{
+			using (var errorForm = new CatalogErrorForm(onlineCatalogInformation, ex))
+			{
+				errorForm.ShowDialog();
+			}
+
+			// We want to suppress error UI on Manager - however, still want call to abort - updated manager will suppress this error - we have already handled the error
+			var message = $"Catalog '{onlineCatalogInformation.DisplayName}': Operation '{taskName}' failed with: {ex.StatusCode}:{ex.Reason ?? "Unknown Error"}. {ex.Message}";
+			Trace.WriteLine(message);
+			return new OperationCanceledException(message, ex);
 		}
 	}
 }

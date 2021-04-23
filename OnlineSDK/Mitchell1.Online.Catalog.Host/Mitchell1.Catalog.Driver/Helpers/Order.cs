@@ -1,44 +1,17 @@
-using System;
 using System.Collections.Generic;
-using Mitchell1.Catalog.Framework.Interfaces;
-using System.ComponentModel;
-using Mitchell1.Online.Catalog.Host.Orders;
-using Mitchell1.Online.Catalog.Host.TransferObjects;
+using Mitchell1.Online.Catalog.Host;
 
 namespace Mitchell1.Catalog.Driver.Helpers
 {
-	public class OrderRequestResponse
+	internal class Order : IExtendedOrder
 	{
-		[TypeConverter(typeof(OrderRequestTypeConverter))]
-		public OrderRequest Request { get; set; } = new OrderRequest();
+		public string ConfirmationNumber { get; set; }
+		public string DeliveryOption { get; set; }
+		public string OrderMessage { get; set; }
+		public string TrackingNumber { get; set; }
+		public string PurchaseOrderNumber { get; set; }
+		public IList<OrderPart> Parts { get; } = new List<OrderPart>();
 
-		[TypeConverter(typeof(OrderResponseTypeConverter))]
-		public OrderResponse Response { get; set; }
-	}
-
-	public class OrderRequestTypeConverter : TypeConverter
-	{
-		public override bool GetPropertiesSupported(ITypeDescriptorContext context)
-		{
-			return true;
-		}
-
-		public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
-		{
-			return TypeDescriptor.GetProperties(typeof(OrderRequest));
-		}
-	}
-
-	public class OrderResponseTypeConverter : TypeConverter
-	{
-		public override bool GetPropertiesSupported(ITypeDescriptorContext context)
-		{
-			return true;
-		}
-
-		public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
-		{
-			return TypeDescriptor.GetProperties(typeof(OrderResponse));
-		}
+		IReadOnlyList<IExtendedOrderPart> IExtendedOrder.Parts => (IReadOnlyList<IExtendedOrderPart>)Parts;
 	}
 }

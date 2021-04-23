@@ -1,15 +1,33 @@
-﻿using System.Runtime.CompilerServices;
-using ExampleCatalog.DataLayer;
+﻿using Mitchell1.Online.Catalog.Host.TransferObjects;
 using Nancy;
 
 namespace ExampleCatalog.Api
 {
-	public class VendorSetupController : Nancy.NancyModule
+	public class ShoppingController : NancyModule
 	{
-		public VendorSetupController() : base("/View")
+		public ShoppingController() : base("/View")
 		{
-			// Qualifier is available as query param (if already setup this catalog)
-			Get["/vendorsetup"] = parameters => View["configuration.html", new {}];
+			Get["/goshopping"] = parameters =>
+			{
+				// Qualifier=> Stored data passed back
+				if (!PartsController.CheckVendor(GetVendorFromQuery(), out _))
+					return PartsController.ServerError("Invalid Login", HttpStatusCode.Forbidden);
+
+				// Other parameters
+				// Vehicle Query params:
+				//		Vin,Year,Make,Model,SubModel,Transmission,Engine,DriveType,Brake,Gvw,Body
+				//		AcesId,AcesBaseId,AcesEngineId,AcesEngineBaseId,AcesEngineConfigId,AcesSubmodelId
+
+				return View["shopping.html", new {}];
+			};
+		}
+
+		private Vendor GetVendorFromQuery()
+		{
+			return new Vendor
+			{
+				Qualifier = Request.Query["Qualifier"]
+			};
 		}
 	}
 }

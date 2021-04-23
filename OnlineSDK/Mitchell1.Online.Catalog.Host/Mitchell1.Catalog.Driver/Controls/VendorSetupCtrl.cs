@@ -1,7 +1,6 @@
 using System;
 using System.Windows.Forms;
 using Mitchell1.Catalog.Driver.Helpers;
-using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host;
 
 namespace Mitchell1.Catalog.Driver.Controls

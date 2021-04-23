@@ -36,7 +36,7 @@ namespace Mitchell1.Catalog.Driver.Controls
             treeNode1,
             treeNode2,
             treeNode3});
-			System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("ICartOrder\'s (0)");
+			System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("ShoppingCartOrder (0)");
 			System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("Vendor", 6, 6);
 			System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Vehicle", 10, 10);
 			System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Host Data", 15, 15);
@@ -185,7 +185,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 			treeNode4.Name = "Cart";
 			treeNode4.Text = "Cart (0)";
 			treeNode5.Name = "OrderCart";
-			treeNode5.Text = "ICartOrder\'s (0)";
+			treeNode5.Text = "ShoppingCartOrder (0)";
 			treeNode6.ImageIndex = 6;
 			treeNode6.Name = "Vendor";
 			treeNode6.SelectedImageIndex = 6;

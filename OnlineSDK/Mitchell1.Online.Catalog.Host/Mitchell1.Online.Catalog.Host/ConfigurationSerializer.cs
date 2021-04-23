@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Xml.Linq;
+using static Mitchell1.Online.Catalog.Host.OnlineCatalogCommunicationFactory;
 
 namespace Mitchell1.Online.Catalog.Host
 {
@@ -31,7 +32,7 @@ namespace Mitchell1.Online.Catalog.Host
             catalog.SupportsLocation = (bool)element.Attribute("SupportsLocation");
             catalog.SupportsOrderMessage = (bool)element.Attribute("SupportsOrderMessage");
             catalog.SupportsPriceCheck = (bool)element.Attribute("SupportsPriceCheck");
-            catalog.DeliveryMethod = (bool)element.Attribute("ShowsDeliverWillCall") ? new DefaultDeliveryMethod() : null;
+            catalog.ShowsDeliverWillCall = (bool)element.Attribute("ShowsDeliverWillCall");
             catalog.SupportUrl = element.Attribute("SupportUrl")?.Value ?? "";
             catalog.SupportPhone = element.Attribute("SupportPhone")?.Value ?? "";
 
@@ -79,7 +80,7 @@ namespace Mitchell1.Online.Catalog.Host
                     new XAttribute("SupportsLocation", catalog.SupportsLocation),
                     new XAttribute("SupportsOrderMessage", catalog.SupportsOrderMessage),
                     new XAttribute("SupportsPriceCheck", catalog.SupportsPriceCheck),
-                    new XAttribute("ShowsDeliverWillCall", catalog.DeliveryMethod != null),
+                    new XAttribute("ShowsDeliverWillCall", catalog.ShowsDeliverWillCall),
                     new XAttribute("SupportUrl", catalog.SupportUrl),
                     new XAttribute("SupportPhone", catalog.SupportPhone)
                 );
@@ -107,7 +108,7 @@ namespace Mitchell1.Online.Catalog.Host
                 return false;
             }
 
-            if (catalog.ApiVersionLevel != 1)
+            if (!IsSupportedApiLevel(catalog.ApiVersionLevel))
             {
                 error = "Catalog Definition Unsupported Api Level";
                 return false;

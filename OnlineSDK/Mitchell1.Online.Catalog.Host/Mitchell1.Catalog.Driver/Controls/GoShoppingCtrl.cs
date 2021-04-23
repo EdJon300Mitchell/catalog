@@ -6,6 +6,7 @@ using Mitchell1.Catalog.Driver.Helpers;
 using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host;
 using Mitchell1.Online.Catalog.Host.TransferObjects;
+using Vendor = Mitchell1.Catalog.Driver.Helpers.Vendor;
 
 namespace Mitchell1.Catalog.Driver.Controls
 {
@@ -112,24 +113,24 @@ namespace Mitchell1.Catalog.Driver.Controls
 			catalogNode.Nodes["HostData"].Tag = hostData;
 		}
 
-		private void FillCartTree(ShoppingCart cart)
+		private void FillCartTree(ShoppingCart cartItems)
         {
-            IList<IPartItem> parts = new List<IPartItem>();
-            IList<ILaborItem> labor = new List<ILaborItem>();
-            IList<INoteItem> notes = new List<INoteItem>();
-            if (cart != null)
+            IList<PartItem> parts = new List<PartItem>();
+            IList<LaborItem> labor = new List<LaborItem>();
+            IList<NoteItem> notes = new List<NoteItem>();
+            if (cartItems != null)
             {
-                foreach (var item in cart.Items)
+                foreach (var item in cartItems)
                 {
 	                switch (item)
 	                {
-		                case IPartItem p:
+		                case PartItem p:
 			                parts.Add(p);
 			                break;
-		                case ILaborItem l:
+		                case LaborItem l:
 			                labor.Add(l);
 			                break;
-		                case INoteItem n:
+		                case NoteItem n:
 			                notes.Add(n);
 			                break;
 	                }
@@ -190,12 +191,13 @@ namespace Mitchell1.Catalog.Driver.Controls
 		    TreeNode orderNode = treeViewCart.Nodes["OrderCart"];
             orderNode.Nodes.Clear();
 
-	        if (cart != null)
+	        if (cartItems != null)
 	        {
-		        orderNode.Text = $"ICartOrder's ({cart.Orders.Count})";
+		        var orders = cartItems.OfType<ShoppingCartOrder>().ToList();
+		        orderNode.Text = $"ShoppingCartOrder ({orders.Count})";
 
 		        int index = 0;
-		        foreach (var order in cart.Orders)
+		        foreach (var order in orders)
 		        {
 			        var node = new TreeNode($"Order# {++index}")
 			        {
@@ -226,5 +228,5 @@ namespace Mitchell1.Catalog.Driver.Controls
 		}
 
 		#endregion
-    }
+	}
 }

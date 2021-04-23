@@ -37,11 +37,10 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>OnlineCatalogKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mitchell1.Browser.Interfaces">
@@ -56,6 +55,9 @@
       <HintPath>..\..\..\bin\Mitchell1.Catalog.Framework.Interfaces.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -69,10 +71,37 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\HostData.cs">
+      <Link>TransferObjects\HostData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\Order.cs">
+      <Link>TransferObjects\Order.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\PriceCheck.cs">
+      <Link>TransferObjects\PriceCheck.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\ShoppingCart.cs">
+      <Link>TransferObjects\ShoppingCart.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\TrackingRequest.cs">
+      <Link>TransferObjects\TrackingRequest.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\TrackingResponse.cs">
+      <Link>TransferObjects\TrackingResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\Vehicle.cs">
+      <Link>TransferObjects\Vehicle.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Samples\C#\ExampleCatalog\TransferObjects\Vendor.cs">
+      <Link>TransferObjects\Vendor.cs</Link>
+    </Compile>
     <Compile Include="API\ApiCallException.cs" />
     <Compile Include="API\HtmlErrorGenerator.cs" />
+    <Compile Include="API\CustomWebPageController.cs" />
+    <Compile Include="API\CustomWebPageControllerHandleForbidden.cs" />
     <Compile Include="API\v1\GoShoppingV1.cs" />
     <Compile Include="API\v1\CatalogRestApiV1.cs" />
+    <Compile Include="API\v1\PartsView.cs" />
     <Compile Include="API\v1\VendorSetupV1.cs" />
     <Compile Include="CatalogErrorForm.cs">
       <SubType>Form</SubType>
@@ -97,29 +126,26 @@
       <DependentUpon>CatalogWaitForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ConfigurationSerializer.cs" />
-    <Compile Include="GoShoppingForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="GoShoppingForm.Designer.cs">
-      <DependentUpon>GoShoppingForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controllers\IEmbeddedCatalogController.cs" />
-    <Compile Include="Controllers\IEmbeddedCatalogTransferController.cs" />
     <Compile Include="Controllers\ICatalogRestController.cs" />
+    <Compile Include="Controllers\IEmbeddedCatalogTransferController.cs" />
+    <Compile Include="ICatalogProperties.cs" />
+    <Compile Include="IExtendedOrder.cs" />
+    <Compile Include="IExtendedPriceCheck.cs" />
+    <Compile Include="IExtendedPriceCheckAlternatePart.cs" />
+    <Compile Include="IExtendedPriceCheckPart.cs" />
+    <Compile Include="IExtendedOrderPart.cs" />
+    <Compile Include="IMetadata.cs" />
     <Compile Include="IOnlineCatalog.cs" />
+    <Compile Include="ISupplierAndShipping.cs" />
+    <Compile Include="Location.cs" />
+    <Compile Include="LocationList.cs" />
     <Compile Include="OnlineCatalog.cs" />
     <Compile Include="OnlineCatalogCommunicationFactory.cs" />
     <Compile Include="OnlineCatalogInformation.cs" />
-    <Compile Include="TransferObjects\OrderRequest.cs" />
-    <Compile Include="TransferObjects\ShoppingCart.cs" />
-    <Compile Include="TransferObjects\TrackingRequestResponse.cs" />
+    <Compile Include="AlternatePartsList.cs" />
+    <Compile Include="MultiList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VendorSetupForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="VendorSetupForm.Designer.cs">
-      <DependentUpon>VendorSetupForm.cs</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="CatalogErrorForm.resx">
       <DependentUpon>CatalogErrorForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -128,9 +154,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CatalogWaitForm.resx">
       <DependentUpon>CatalogWaitForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="GoShoppingForm.resx">
-      <DependentUpon>GoShoppingForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -142,9 +165,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="VendorSetupForm.resx">
-      <DependentUpon>VendorSetupForm.cs</DependentUpon>
-    </EmbeddedResource>
+    <None Include="OnlineCatalogKey.snk" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -161,8 +183,13 @@
   <ItemGroup>
     <None Include="Resources\Stop.gif" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

@@ -8,26 +8,27 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Dapper;
-using ExampleCatalog.DataLayer;
 using Microsoft.Data.Sqlite;
+using Mitchell1.Online.Catalog.Host.TransferObjects;
+using Newtonsoft.Json;
 
 namespace ExampleCatalog.Persistence
 {
-	public class ObjectStore
+	public static class ObjectStore
 	{
-		private static DbConnection _keepAlive;
+		private static readonly DbConnection keepAlive;
+
 		static ObjectStore()
 		{
 			try
 			{
-				var cl = DbProviderFactories.GetFactoryClasses();
 				Console.WriteLine("Creating In-Memory SQL Database...");
 				var sql = GetResource("ExampleCatalog.Persistence.DatabaseSchema.txt");
 
 				// Do not close this connection - if it closes, we loose in-memory db that is shared
-				_keepAlive = GetConnection();
+				keepAlive = GetConnection();
 
-				using (var command = _keepAlive.CreateCommand())
+				using (var command = keepAlive.CreateCommand())
 				{
 					command.CommandType = CommandType.Text;
 					command.CommandText = sql;
@@ -58,7 +59,7 @@ namespace ExampleCatalog.Persistence
 		private static DbConnection GetConnection()
 		{
 			var connectionString = ConfigurationManager.ConnectionStrings["orders"];
-			DbConnection connection = null;
+			DbConnection connection;
 			if (connectionString.ProviderName == "MS.SQlite")
 			{
 				connection = new SqliteConnection();
@@ -76,7 +77,7 @@ namespace ExampleCatalog.Persistence
 			return connection;
 		}
 
-		public long CreateOrder(string managerPurchaseOrder, int customerId, string vehicleJson)
+		public static long CreateOrder(string managerPurchaseOrder, int customerId, string vehicleJson)
 		{
 			using (var connection = GetConnection())
 			{
@@ -92,7 +93,7 @@ namespace ExampleCatalog.Persistence
 			}
 		}
 
-		public long CreateTracking(long orderId)
+		public static long CreateTracking(long orderId)
 		{
 			var rand = new Random();
 			using (var connection = GetConnection())
@@ -106,7 +107,29 @@ namespace ExampleCatalog.Persistence
 			}
 		}
 
-		public List<TrackingDetail> GetRelatedOrders(int shop, string managerPurchaseOrder)
+        public static long CreatePriceCheckSession(PriceCheckRequest priceCheckRequest)
+        {
+			using (var connection = GetConnection())
+            {
+                return connection.ExecuteScalar<long>("INSERT INTO price_check_session (json) VALUES (@json); SELECT last_insert_rowid();", new
+                {
+	                json = JsonConvert.SerializeObject(priceCheckRequest)
+                });
+            }
+        }
+
+        public static long CreateOrderPartsSession(OrderRequest orderRequest)
+        {
+            using (var connection = GetConnection())
+            {
+                return connection.ExecuteScalar<long>("INSERT INTO order_parts_session (json) VALUES (@json); SELECT last_insert_rowid();", new
+                {
+                    json = JsonConvert.SerializeObject(orderRequest)
+                });
+            }
+        }
+
+		public static List<TrackingDetail> GetRelatedOrders(int shop, string managerPurchaseOrder)
 		{
 			if (string.IsNullOrWhiteSpace(managerPurchaseOrder))
 				return new List<TrackingDetail>();
@@ -135,7 +158,7 @@ namespace ExampleCatalog.Persistence
 			}
 		}
 
-		public TrackingDetail GetTrackingStatus(int shop, long orderTrackingNumber)
+		public static TrackingDetail GetTrackingStatus(int shop, long orderTrackingNumber)
 		{
 			using (var connection = GetConnection())
 			{
@@ -161,7 +184,37 @@ namespace ExampleCatalog.Persistence
 			}
 		}
 
-		public class DbTracking
+        public static PriceCheckRequest GetPriceCheckSession(long id)
+		{
+            using (var connection = GetConnection())
+            { 
+                return JsonConvert.DeserializeObject<PriceCheckRequest>(connection.Query<string>(
+                @"SELECT json
+                FROM price_check_session
+                WHERE id = @id;",
+                new
+                {
+                    id
+                }).SingleOrDefault());
+            }
+        }
+
+        public static OrderRequest GetOrderPartsSession(long id)
+		{
+	        using (var connection = GetConnection())
+	        {
+                return JsonConvert.DeserializeObject<OrderRequest>(connection.Query<string>(
+                @"SELECT json
+						FROM order_parts_session
+						WHERE id = @id;",
+			        new
+			        {
+				        id
+			        }).SingleOrDefault());
+	        }
+        }
+
+        public class DbTracking
 		{
 			public long tracking_id { get; set; }
 			public long order_id { get; set; }
@@ -185,12 +238,12 @@ namespace ExampleCatalog.Persistence
 			ManagerPurchaseOrder = tracking.manager_po;
 		}
 
-		public long TrackingId { get; set; }
-		public long OrderId { get; set; }
-		public string ManagerPurchaseOrder { get; set; }
-		public DateTime Ordered { get; set; }
-		public DateTime Arrives { get; set; }
-		public string Status { get; set; }
-		public string VehicleJson { get; set; }
+		public long TrackingId { get; }
+		public long OrderId { get; }
+		public string ManagerPurchaseOrder { get; }
+		public DateTime Ordered { get; }
+		public DateTime Arrives { get; }
+		public string Status { get; }
+		public string VehicleJson { get; }
 	}
 }

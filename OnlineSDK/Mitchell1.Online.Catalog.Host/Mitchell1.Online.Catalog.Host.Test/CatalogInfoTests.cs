@@ -45,7 +45,7 @@ namespace Mitchell1.Online.Catalog.Host.Test
             //info.LoadOnlineCatalogInformation()
         }
 
-        [TestMethod]
+        [TestMethod, Ignore]
         public void FindCachedImageTest()
         {
             CatalogInfo info = new CatalogInfo();
@@ -102,7 +102,7 @@ namespace Mitchell1.Online.Catalog.Host.Test
             Assert.IsNull(image, "Cached image should not be found");
         }
 
-        [TestMethod]
+        [TestMethod, Ignore]
         public void CacheImageTest()
         {
             CatalogInfo info = new CatalogInfo();
@@ -125,7 +125,7 @@ namespace Mitchell1.Online.Catalog.Host.Test
             File.Delete(iconFiles.First());
         }
 
-        [TestMethod]
+        [TestMethod, Ignore]
         public void ClearOldImageTest()
         {
             CatalogInfo info = new CatalogInfo();

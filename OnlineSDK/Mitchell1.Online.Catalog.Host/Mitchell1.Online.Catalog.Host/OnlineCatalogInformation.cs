@@ -4,16 +4,18 @@ using Mitchell1.Catalog.Framework.Interfaces;
 
 namespace Mitchell1.Online.Catalog.Host
 {
-    public class OnlineCatalogInformation
+	public class OnlineCatalogInformation : ICatalogProperties
     {
         private readonly Dictionary<CatalogApiPart, string> urlParts = new Dictionary<CatalogApiPart, string>();
+
+        public static int HostApiLevel { get; } = 3;
 
         public string DisplayName { get; set; }
         public string Description { get; set; }
         public string Identifier { get; set; }
 
         /// <summary>
-        /// Version of Catalog API you support.
+        /// Minimum Version of Catalog API supported by this catalog.
         /// </summary>
         public int ApiVersionLevel { get; set; }
 
@@ -44,26 +46,20 @@ namespace Mitchell1.Online.Catalog.Host
 		    return urlParts.Keys.ToList();
 	    }
 
-        // Catalog API Methods
-        public IDeliveryMethod DeliveryMethod { get; set; }
-        public bool AllowsBlankManufacturerCode { get; set; }
-        public bool AllowsNotFoundPartsToBeOrdered { get; set; }
-        public bool RequiresPriceCheck { get; set; }
-        public bool SupportsAlternateLocations { get; set; }
-        public bool SupportsAlternateParts { get; set; }
-        public bool SupportsLocation { get; set; }
-        public bool SupportsOrderMessage { get; set; }
-        public bool SupportsPriceCheck { get; set; }
+		// Catalog API Methods
+		public bool ShowsDeliverWillCall { get; set; }
+		public bool AllowsBlankManufacturerCode { get; set; }
+		public bool AllowsNotFoundPartsToBeOrdered { get; set; }
+		public bool RequiresPriceCheck { get; set; }
+		public bool SupportsAlternateLocations { get; set; }
+		public bool SupportsAlternateParts { get; set; }
+		public bool SupportsLocation { get; set; }
+		public bool SupportsOrderMessage { get; set; }
+		public bool SupportsPriceCheck { get; set; }
 
-        // Additional Items specific to online
-        public string SupportUrl { get; set; }
+		// Additional Items specific to online
+		public string SupportUrl { get; set; }
         public string SupportPhone { get; set; }
-    }
-
-    public class DefaultDeliveryMethod : IDeliveryMethod
-    {
-        public IList<string> Options { get; }
-        public string Default { get; }
     }
 
     public enum CatalogApiPart

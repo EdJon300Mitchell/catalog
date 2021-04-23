@@ -1,6 +1,6 @@
 ﻿namespace Mitchell1.Online.Catalog.Host
 {
-    partial class CatalogHostingForm
+	sealed partial class CatalogHostingForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,25 +28,26 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.catalogHostingControl1 = new Mitchell1.Online.Catalog.Host.CatalogHostingControl();
+            this.catalogHostingControl = new Mitchell1.Online.Catalog.Host.CatalogHostingControl();
             this.SuspendLayout();
             // 
-            // catalogHostingControl1
+            // catalogHostingControl
             // 
-            this.catalogHostingControl1.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.catalogHostingControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.catalogHostingControl1.Location = new System.Drawing.Point(0, 0);
-            this.catalogHostingControl1.Name = "catalogHostingControl1";
-            this.catalogHostingControl1.Size = new System.Drawing.Size(707, 414);
-            this.catalogHostingControl1.TabIndex = 0;
-            this.catalogHostingControl1.Text = "catalogHostingControl1";
+            this.catalogHostingControl.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.catalogHostingControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.catalogHostingControl.Location = new System.Drawing.Point(0, 0);
+            this.catalogHostingControl.Name = "catalogHostingControl";
+            this.catalogHostingControl.OnlineCatalogInformation = null;
+            this.catalogHostingControl.Size = new System.Drawing.Size(730, 592);
+            this.catalogHostingControl.TabIndex = 0;
+            this.catalogHostingControl.Text = "catalogHostingControl";
             // 
             // CatalogHostingForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(707, 414);
-            this.Controls.Add(this.catalogHostingControl1);
+            this.ClientSize = new System.Drawing.Size(730, 592);
+            this.Controls.Add(this.catalogHostingControl);
             this.MinimizeBox = false;
             this.Name = "CatalogHostingForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -57,7 +58,7 @@
 
         #endregion
 
-        private CatalogHostingControl catalogHostingControl1;
+        private CatalogHostingControl catalogHostingControl;
     }
 }
 

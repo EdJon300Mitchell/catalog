@@ -7,14 +7,12 @@ using Mitchell1.Catalog.Driver.Controls;
 using Mitchell1.Catalog.Driver.Data;
 using Mitchell1.Catalog.Driver.Helpers;
 using Mitchell1.Catalog.Framework.Common;
-using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host;
-using Mitchell1.Online.Catalog.Host.TransferObjects;
-using CatalogConfiguration = Mitchell1.Catalog.Driver.Controls.CatalogConfiguration;
+using ShoppingCart = Mitchell1.Online.Catalog.Host.TransferObjects.ShoppingCart;
 
 namespace Mitchell1.Catalog.Driver
 {
-    public partial class CatalogDriver : Form, ICatalogDriver
+	public partial class CatalogDriver : Form, ICatalogDriver
 	{
         private enum DriverState
         {
@@ -27,11 +25,11 @@ namespace Mitchell1.Catalog.Driver
 			ConfigureCatalog
         }
 
-    	private readonly IPriceCheck priceCheck = new PriceCheck();
-    	private readonly OrderRequestResponse order = new OrderRequestResponse();
+    	private readonly PriceCheck priceCheck = new PriceCheck();
+    	private readonly Order order = new Order();
         private readonly Vehicle vehicle = new Vehicle();
         private readonly Vendor vendor = new Vendor();
-        private readonly HostData hostData = new HostData("Mitchell 1 Catalog Driver", 70M);
+        private readonly HostData hostData = new HostData("Mitchell 1 Catalog Driver", "8.4", 70M);
     	private DriverState currentState = DriverState.None;
         private GoShoppingCtrl goShoppingCtrl = null;
         private VendorSetupCtrl vendorSetup = null;

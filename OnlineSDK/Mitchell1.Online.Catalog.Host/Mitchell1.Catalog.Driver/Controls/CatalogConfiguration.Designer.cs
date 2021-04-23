@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
 			this.components = new System.ComponentModel.Container();
-			this.comboBox1 = new System.Windows.Forms.ComboBox();
+			this.comboBoxApiLevel = new System.Windows.Forms.ComboBox();
 			this.label1 = new System.Windows.Forms.Label();
 			this.textBoxDescription = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
@@ -62,26 +62,28 @@
 			this.buttonUse = new System.Windows.Forms.Button();
 			this.buttonCancel = new System.Windows.Forms.Button();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+			this.buttonLoad = new System.Windows.Forms.Button();
 			this.label5 = new System.Windows.Forms.Label();
 			this.linkLabelConfig = new System.Windows.Forms.LinkLabel();
 			this.label6 = new System.Windows.Forms.Label();
-			this.buttonLoad = new System.Windows.Forms.Button();
 			this.tabControl.SuspendLayout();
 			this.tabPageBasic.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.dataGridViewURLs)).BeginInit();
 			this.tabPageAdvanced.SuspendLayout();
 			this.SuspendLayout();
 			// 
-			// comboBox1
+			// comboBoxApiLevel
 			// 
-			this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.comboBox1.FormattingEnabled = true;
-			this.comboBox1.Items.AddRange(new object[] {
-            "1"});
-			this.comboBox1.Location = new System.Drawing.Point(108, 23);
-			this.comboBox1.Name = "comboBox1";
-			this.comboBox1.Size = new System.Drawing.Size(200, 21);
-			this.comboBox1.TabIndex = 1;
+			this.comboBoxApiLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.comboBoxApiLevel.FormattingEnabled = true;
+			this.comboBoxApiLevel.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3"});
+			this.comboBoxApiLevel.Location = new System.Drawing.Point(108, 23);
+			this.comboBoxApiLevel.Name = "comboBoxApiLevel";
+			this.comboBoxApiLevel.Size = new System.Drawing.Size(200, 21);
+			this.comboBoxApiLevel.TabIndex = 1;
 			// 
 			// label1
 			// 
@@ -286,7 +288,7 @@
 			this.tabPageAdvanced.Controls.Add(this.checkBoxAllowsNotFoundPartsToBeOrdered);
 			this.tabPageAdvanced.Controls.Add(this.checkBoxSupportsLocation);
 			this.tabPageAdvanced.Controls.Add(this.label1);
-			this.tabPageAdvanced.Controls.Add(this.comboBox1);
+			this.tabPageAdvanced.Controls.Add(this.comboBoxApiLevel);
 			this.tabPageAdvanced.Controls.Add(this.checkBoxSupportsOrderMessage);
 			this.tabPageAdvanced.Controls.Add(this.checkBoxSupportsPriceCheck);
 			this.tabPageAdvanced.Controls.Add(this.checkBoxRequiresPriceCheck);
@@ -418,6 +420,18 @@
 			this.buttonCancel.UseVisualStyleBackColor = true;
 			this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
 			// 
+			// buttonLoad
+			// 
+			this.buttonLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonLoad.Location = new System.Drawing.Point(437, 428);
+			this.buttonLoad.Name = "buttonLoad";
+			this.buttonLoad.Size = new System.Drawing.Size(63, 23);
+			this.buttonLoad.TabIndex = 7;
+			this.buttonLoad.Text = "Load";
+			this.toolTip1.SetToolTip(this.buttonLoad, "Load alternate config file");
+			this.buttonLoad.UseVisualStyleBackColor = true;
+			this.buttonLoad.Click += new System.EventHandler(this.buttonLoad_Click);
+			// 
 			// label5
 			// 
 			this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -451,18 +465,6 @@
 			this.label6.TabIndex = 6;
 			this.label6.Text = "Configure && Save Online Catalog to use test harness";
 			// 
-			// buttonLoad
-			// 
-			this.buttonLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonLoad.Location = new System.Drawing.Point(437, 428);
-			this.buttonLoad.Name = "buttonLoad";
-			this.buttonLoad.Size = new System.Drawing.Size(63, 23);
-			this.buttonLoad.TabIndex = 7;
-			this.buttonLoad.Text = "Load";
-			this.toolTip1.SetToolTip(this.buttonLoad, "Load alternate config file");
-			this.buttonLoad.UseVisualStyleBackColor = true;
-			this.buttonLoad.Click += new System.EventHandler(this.buttonLoad_Click);
-			// 
 			// CatalogConfiguration
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -488,7 +490,7 @@
         }
 
         #endregion
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.ComboBox comboBoxApiLevel;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxDescription;
         private System.Windows.Forms.Label label2;

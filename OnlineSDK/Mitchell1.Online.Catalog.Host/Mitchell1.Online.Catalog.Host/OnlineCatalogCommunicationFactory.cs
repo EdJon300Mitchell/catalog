@@ -1,63 +1,62 @@
 ﻿using System;
+using Mitchell1.Catalog.Framework.Common;
 using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host.API.v1;
 using Mitchell1.Online.Catalog.Host.Controllers;
-using Mitchell1.Online.Catalog.Host.TransferObjects;
 
 namespace Mitchell1.Online.Catalog.Host
 {
-    internal static class OnlineCatalogCommunicationFactory
+	internal static class OnlineCatalogCommunicationFactory
     {
         /// <summary>
         /// Returns a generic controller capable of saving/loading configuration for Vendor Setup
         /// </summary>
         internal static IEmbeddedCatalogController GetCatalogVendorSetupController(OnlineCatalogInformation catalogInformation, IVendor vendor, IHostData hostData)
         {
-            if (catalogInformation == null)
-                throw new ArgumentNullException(nameof(catalogInformation));
+	        CheckApiLevel(catalogInformation);
 
-            if (catalogInformation.ApiVersionLevel == 1)
-                return new VendorSetupV1(catalogInformation)
-                {
-                    Vendor = vendor,
-                    HostData = hostData
-                };
-
-            throw new CatalogException($"Unsupported Catalog API Level: {catalogInformation.ApiVersionLevel}");
+            return new VendorSetupV1(catalogInformation)
+            {
+                Vendor = vendor,
+                HostData = hostData
+            };
         }
 
         /// <summary>
         /// Returns a controller suitable for transferring parts - aka go shopping
         /// </summary>
-        internal static IEmbeddedCatalogTransferController GetEmbeddedCatalogTransferController(OnlineCatalogInformation catalogInformation, ShoppingCart cart, IVendor vendor, IHostData hostData, IVehicle vehicle)
+        internal static GoShoppingV1 GetEmbeddedCatalogTransferController(OnlineCatalogInformation catalogInformation, IVendor vendor, IHostData hostData, IVehicle vehicle)
         {
-            if (catalogInformation == null)
-                throw new ArgumentNullException(nameof(catalogInformation));
+	        CheckApiLevel(catalogInformation);
 
-            if (catalogInformation.ApiVersionLevel == 1)
-                return new GoShoppingV1(catalogInformation)
-                {
-                    Cart = cart,
-                    Vendor = vendor,
-                    HostData = hostData,
-                    Vehicle = vehicle
-                };
-
-            throw new CatalogException($"Unsupported Catalog API Level: {catalogInformation.ApiVersionLevel}");
+            return new GoShoppingV1(catalogInformation)
+            {
+                Vendor = vendor,
+                HostData = hostData,
+                Vehicle = vehicle
+            };
         }
 
         /// <summary>
         /// Used for API based calls. Price Check / Order Parts
         /// </summary>
-        internal static ICatalogRestController GetRestApiController(OnlineCatalogInformation catalogInformation)
+        internal static ICatalogRestController GetRestApiController(OnlineCatalogInformation catalogInformation, Logger logger, NewCatalogHostingForm newHostingForm)
         {
-            if (catalogInformation == null)
-                throw new ArgumentNullException(nameof(catalogInformation));
+	        CheckApiLevel(catalogInformation);
 
-            if (catalogInformation.ApiVersionLevel == 1)
-                return new CatalogRestApiV1(catalogInformation);
+			return new CatalogRestApiV1(catalogInformation, logger, newHostingForm);
+        }
 
-            throw new CatalogException($"Unsupported Catalog API Level: {catalogInformation.ApiVersionLevel}");
+        internal static bool IsSupportedApiLevel(int apiVersionLevel) => apiVersionLevel >= 1 && apiVersionLevel <= 3;
+
+        private static void CheckApiLevel(OnlineCatalogInformation catalogInformation)
+        {
+	        if (catalogInformation == null)
+		        throw new ArgumentNullException(nameof(catalogInformation));
+
+	        int apiVersionLevel = catalogInformation.ApiVersionLevel;
+            if (!IsSupportedApiLevel(apiVersionLevel))
+	            throw new CatalogException($"Unsupported Catalog API Level: {apiVersionLevel}");
         }
     }
 }

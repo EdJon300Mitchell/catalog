@@ -1,61 +1,31 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Runtime.Remoting.Channels;
-using Mitchell1.Browser.Interfaces;
 using Mitchell1.Catalog.Framework.Interfaces;
-using Mitchell1.Online.Catalog.Host.Controllers;
 
 namespace Mitchell1.Online.Catalog.Host.API.v1
 {
-    public class VendorSetupV1 : IEmbeddedCatalogController
+	public class VendorSetupV1 : CustomWebPageController
     {
-        private readonly OnlineCatalogInformation onlineCatalogInformation;
+		private readonly OnlineCatalogInformation onlineCatalogInformation;
 
-        private string ConfigurationUrl => onlineCatalogInformation.GetAbsoluteUrl(CatalogApiPart.Setup);
+		private string ConfigurationUrl => onlineCatalogInformation.GetAbsoluteUrl(CatalogApiPart.Setup);
 
-        public VendorSetupV1(OnlineCatalogInformation catalogInformation)
+		public VendorSetupV1(OnlineCatalogInformation catalogInformation) => onlineCatalogInformation = catalogInformation;
+
+		protected override string Url => ConfigurationUrl + (!string.IsNullOrEmpty(Vendor?.Qualifier) ? "?Qualifier=" + Uri.EscapeDataString(Vendor.Qualifier) : "");
+        protected override string ActionLabel { get; } = "save";
+
+		public IVendor Vendor { get; set; }
+		// ReSharper disable once UnusedAutoPropertyAccessor.Global
+		public IHostData HostData { get; set; }
+
+        protected override bool Action(object[] objects)
         {
-            onlineCatalogInformation = catalogInformation;
-        }
+			if (objects != null && objects.Length > 1 && objects[1] is string)
+			{
+				Vendor.Qualifier = (string)objects[1];
+			}
 
-        public event EventHandler<bool> RequestCompleted;
-
-        public void AttachBrowser<T>(IWebBrowserControl<T> browser)
-        {
-            browser.JavaScriptRegisterActionCallback("save", SaveConfiguration);
-            browser.JavaScriptRegisterActionCallback("cancel", CancelChanges);
-
-            string queryString = "";
-            if (!String.IsNullOrEmpty(Vendor?.Qualifier))
-            {
-                queryString = "?Qualifier=" + Uri.EscapeDataString(Vendor.Qualifier);
-            }
-
-            browser.Url = ConfigurationUrl + queryString;
-        }
-
-        public void DetachBrowser<T>(IWebBrowserControl<T> browser)
-        {
-            browser.JavaScriptUnregisterAction("save");
-            browser.JavaScriptUnregisterAction("cancel");
-        }
-
-        public IVendor Vendor { get; set; }
-        public IHostData HostData { get; set; }
-
-        private void CancelChanges(object[] objects)
-        {
-            RequestCompleted?.Invoke(this, false);
-        }
-
-        private void SaveConfiguration(object[] objects)
-        {
-            if (objects != null && objects.Length > 1 && objects[1] is string)
-            {
-                Vendor.Qualifier = (string)objects[1];
-            }
-
-            RequestCompleted?.Invoke(this, true);
+			return true;
         }
     }
 }

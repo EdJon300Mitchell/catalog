@@ -1,29 +1,21 @@
 using System.Collections.Generic;
-using Mitchell1.Catalog.Framework.Interfaces;
 using System.ComponentModel;
+using Mitchell1.Online.Catalog.Host;
 
 namespace Mitchell1.Catalog.Driver.Helpers
 {
-	internal class PriceCheck : IPriceCheck
+	internal class PriceCheck : IExtendedPriceCheck
 	{
-		private readonly List<IPriceCheckPart> parts = new List<IPriceCheckPart>();
-
-		[DescriptionAttribute("The delivery method by which the part is transferred to the customer")]
-		public string DeliveryOption { get; set; }
-
-		public void AddPart(IPriceCheckPart part)
-		{
-			parts.Add(part);
-		}
-
-		public IList<IPriceCheckPart> Parts
-		{
-			get { return parts; }
-		}
-
 		public PriceCheck()
 		{
 			DeliveryOption = string.Empty;
 		}
+
+		[Description("The delivery method by which the part is transferred to the customer")]
+		public string DeliveryOption { get; }
+
+		public IList<PriceCheckPart> Parts { get; } = new List<PriceCheckPart>();
+
+		IReadOnlyList<IExtendedPriceCheckPart> IExtendedPriceCheck.Parts => (IReadOnlyList<IExtendedPriceCheckPart>)Parts;
 	}
 }

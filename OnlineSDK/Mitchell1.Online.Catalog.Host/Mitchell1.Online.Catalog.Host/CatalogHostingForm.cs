@@ -1,29 +1,63 @@
 ﻿using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Mitchell1.Catalog.Framework.Interfaces;
+using Mitchell1.Online.Catalog.Host.Controllers;
 
 namespace Mitchell1.Online.Catalog.Host
 {
-    public partial class CatalogHostingForm : Form
-    {
-        private OnlineCatalogInformation onlineCatalogInformation;
+	public interface ICatalogHostingForm : IDisposable
+	{
+		bool ShowWebPage();
+        Size ClientSize { set; }
+        bool MaximizeBox { set; }
+        FormWindowState WindowState { set; }
+	}
 
-        protected CatalogHostingForm()
+	public delegate ICatalogHostingForm NewCatalogHostingForm(OnlineCatalogInformation onlineCatalogInformation, IEmbeddedCatalogController catalogController, string text = null);
+
+	public sealed partial class CatalogHostingForm : Form, ICatalogHostingForm
+	{
+	    private readonly IEmbeddedCatalogController catalogController;
+
+	    public static NewCatalogHostingForm New => (x, y, z) => new CatalogHostingForm(x, y, z);
+
+        private CatalogHostingForm(OnlineCatalogInformation onlineCatalogInformation, IEmbeddedCatalogController catalogController, string text)
         {
-            InitializeComponent();
+	        this.catalogController = catalogController;
+	        InitializeComponent();
+	        catalogHostingControl.OnlineCatalogInformation = onlineCatalogInformation;
+            Text = (text != null ? text + " - " : "") + onlineCatalogInformation.DisplayName;
+            catalogController.RequestCompleted += CatalogControllerOnCloseWindowRequested;
+            HostingControl.SetEmbeddedCatalogController(catalogController);
+            // TODO: Could have 16x16 Window Icon Set
         }
 
-        protected OnlineCatalogInformation Catalog => onlineCatalogInformation;
+        private CatalogHostingControl HostingControl => catalogHostingControl;
 
-        protected CatalogHostingControl HostingControl => catalogHostingControl1;
-
-        protected virtual void LoadOnlineCatalog(OnlineCatalogInformation catalog)
+        private void CatalogControllerOnCloseWindowRequested(object sender, bool completed)
         {
-            onlineCatalogInformation = catalog;
-            catalogHostingControl1.OnlineCatalogInformation = onlineCatalogInformation;
+	        DialogResult = completed ? DialogResult.OK : DialogResult.Cancel;
+	        Close();
+        }
 
-            // TODO: Could have 16x16 Window Icon Set
+        public bool ShowWebPage()
+        {
+	        var completed = ShowDialog() == DialogResult.OK;
+
+	        if (!completed && catalogController is IEmbeddedCatalogTransferController controller && controller.HttpResponseCode == 403)
+	        {
+		        throw new CatalogAuthenticationException();
+	        }
+
+	        return completed;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+	        catalogController.RequestCompleted -= CatalogControllerOnCloseWindowRequested;
+	        base.OnClosed(e);
         }
 
         // P/Invoke constants
@@ -65,9 +99,9 @@ namespace Mitchell1.Online.Catalog.Host
             // Test if the About item was selected from the system menu
             if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_DEVTOOLS_ID))
             {
-                if (catalogHostingControl1 != null && !catalogHostingControl1.IsDisposed)
+                if (catalogHostingControl != null && !catalogHostingControl.IsDisposed)
                 {
-                    catalogHostingControl1.ShowDeveloperTools();
+                    catalogHostingControl.ShowDeveloperTools();
                 }
             }
         }

@@ -5,27 +5,30 @@ using System.Windows.Forms;
 using Mitchell1.Catalog.Driver.Helpers;
 using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host;
-using Mitchell1.Online.Catalog.Host.TransferObjects;
+using PartCategory = Mitchell1.Catalog.Framework.Interfaces.PartCategory;
+using PartItem = Mitchell1.Online.Catalog.Host.TransferObjects.PartItem;
+using ShoppingCart = Mitchell1.Online.Catalog.Host.TransferObjects.ShoppingCart;
 
 namespace Mitchell1.Catalog.Driver.Controls
 {
-    public partial class PriceCheckCtrl : UserControl
+	public partial class PriceCheckCtrl : UserControl
 	{
 		private static readonly ExternalCatalogAdapterErrorHandler catalogExceptionHandler = new ExternalCatalogAdapterErrorHandler();
 		private int startingPO = 1000;
 		
 		private readonly IOnlineCatalog catalog;
-		private readonly ShoppingCart cart;
-    	private readonly IPriceCheck priceCheck;
-    	private readonly OrderRequestResponse order;
-		private readonly IVendor vendor;
-		private readonly IVehicle vehicle;
-		private readonly IHostData hostData;
+		private readonly ShoppingCart cartItems;
+    	private readonly PriceCheck priceCheck;
+    	private readonly Order order;
+		private readonly Vendor vendor;
+		private readonly Vehicle vehicle;
+		private readonly HostData hostData;
+		private bool ordered;
 
-		public PriceCheckCtrl(IOnlineCatalogInfo catalogInfo, ShoppingCart cart, IPriceCheck priceCheck, OrderRequestResponse order, 
-			Vendor vendor, IVehicle vehicle, IHostData hostData)
+		internal PriceCheckCtrl(IOnlineCatalogInfo catalogInfo, ShoppingCart cartItems, PriceCheck priceCheck, Order order, 
+			Vendor vendor, Vehicle vehicle, HostData hostData)
         {
-            this.cart = cart;
+            this.cartItems = cartItems;
         	this.priceCheck = priceCheck;
         	this.order = order;
             this.vendor = vendor;
@@ -62,14 +65,14 @@ namespace Mitchell1.Catalog.Driver.Controls
 
         private void FillTree()
         {
-            IList<IPartItem> parts = new List<IPartItem>();
-            if (cart != null)
+            IList<PartItem> parts = new List<PartItem>();
+            if (cartItems != null)
             {
-                foreach (ICartItem item in cart.Items)
+                foreach (var item in cartItems)
                 {
-					if (item is IPartItem)
+					if (item is PartItem partItem)
 					{
-						parts.Add((IPartItem) item);
+						parts.Add(partItem);
 					}
                 }
             }
@@ -79,7 +82,7 @@ namespace Mitchell1.Catalog.Driver.Controls
             partsNode.Text = "Part Items (" + parts.Count + ")";
             if (parts.Count > 0)
             {
-                foreach (IPartItem part in parts)
+                foreach (var part in parts)
                 {
                     TreeNode partNode = new TreeNode(part.PartNumber + " : " + part.Description)
                 	{
@@ -93,7 +96,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 			treeViewCart.ExpandAll();
         }
 
-    	private static void AddPriceCheckPartToTree(TreeNode part, IPriceCheckPart priceCheckPart)
+    	private static void AddPriceCheckPartToTree(TreeNode part, IExtendedPriceCheckPart priceCheckPart)
     	{
     		part.Nodes.Clear();
     		part.Tag = priceCheckPart;
@@ -108,13 +111,14 @@ namespace Mitchell1.Catalog.Driver.Controls
     			part.SelectedImageIndex = 14;
     			part.ImageIndex = 14;
     		}
-    		foreach (ILocation location in priceCheckPart.Locations)
+
+    		foreach (var location in priceCheckPart.Locations)
     		{
     			TreeNode locationNode = new TreeNode(location.Name) {Tag = location};
     			part.Nodes.Add(locationNode);
     		}
 							
-    		foreach (IPriceCheckAlternatePart alternatePart in priceCheckPart.AlternateParts)
+    		foreach (var alternatePart in priceCheckPart.AlternateParts)
     		{
     			TreeNode altPartNode = new TreeNode(alternatePart.PartNumber + " : " + alternatePart.Description)
                	{
@@ -122,7 +126,7 @@ namespace Mitchell1.Catalog.Driver.Controls
                		ImageIndex = 17,
                		SelectedImageIndex = 17
                	};
-    			foreach (ILocation location in alternatePart.Locations)
+    			foreach (var location in alternatePart.Locations)
     			{
     				TreeNode locationNode = new TreeNode(location.Name) {Tag = location};
     				altPartNode.Nodes.Add(locationNode);
@@ -131,40 +135,47 @@ namespace Mitchell1.Catalog.Driver.Controls
     		}
     	}
 
-    	private static PriceCheckPart ConvertToPriceCheckPart(IPartItem partItem)
+    	private static PriceCheckPart ConvertToPriceCheckPart(PartItem partItem)
     	{
 			// Emulate decimal rounding issue on Manager SE
 			partItem.Quantity = decimal.Parse(partItem.Quantity.ToString("0.00"));
 
+			var location = new Location
+			{
+				UnitList = partItem.UnitList,
+				UnitCost = partItem.UnitCost,
+				UnitCore = partItem.UnitCore,
+				SupplierName = partItem.SupplierName,
+				ShippingDescription = partItem.ShippingDescription,
+				ShippingCost = partItem.ShippingCost,
+				QuantityAvailable = partItem.Quantity
+			};
     		return new PriceCheckPart
-    			{
-    				Description = partItem.Description,
-    				ManufacturerLineCode = partItem.ManufacturerLineCode,
-    				ManufacturerName = partItem.ManufacturerName,
-    				PartNumber = partItem.PartNumber,
-    				QuantityAvailable = 0,
-    				QuantityOrdered = 0,
-    				QuantityRequested = partItem.Quantity,
-    				Status = "",
-    				UnitCore = partItem.UnitCore,
-    				UnitCost = partItem.UnitCost,
-    				UnitList = partItem.UnitList,
-    				UnitPrice = (partItem.UnitCost * 1.5M)
-    			};
+    		{
+    			Description = partItem.Description,
+    			ManufacturerLineCode = partItem.ManufacturerLineCode,
+    			ManufacturerName = partItem.ManufacturerName,
+    			PartNumber = partItem.PartNumber,
+    			QuantityRequested = partItem.Quantity,
+                QuantityOrdered = 0,
+    			Status = "",
+				Metadata = partItem.Metadata,
+				SelectedLocation = location
+            };
     	}
 
     	private void AddOrderToTree()
 	    {
-		    buttonOrderTracking.Text = $"Track Order #{order.Response.TrackingNumber ?? "--"}";
+		    buttonOrderTracking.Text = $"Track Order #{order.TrackingNumber ?? "--"}";
 
-			TreeNode orderNode = new TreeNode("Order : " + order.Response.ConfirmationNumber)
+			TreeNode orderNode = new TreeNode("Order : " + order.ConfirmationNumber)
          	{
          		Name = "Order",
          		Tag = order,
          		SelectedImageIndex = 2,
          		ImageIndex = 2
          	};
-			foreach (IOrderPart orderPart in order.Response.Parts)
+			foreach (IExtendedOrderPart orderPart in order.Parts)
 			{
 				TreeNode orderPartNode = new TreeNode(orderPart.PartNumber + ":" + orderPart.Description)
              	{
@@ -182,10 +193,11 @@ namespace Mitchell1.Catalog.Driver.Controls
 			treeViewAppSettings.Nodes["Order"].ExpandAll();
 		}
 
-		private void AddPartItemToOrder(IPartItem partItem)
+		private void AddPartItemToOrder(PartItem partItem)
 		{
 			OrderPart orderPart = new OrderPart
           	{
+				Found = true,
           		Description = partItem.Description,
           		ManufacturerLineCode = partItem.ManufacturerLineCode,
           		ManufacturerName = partItem.ManufacturerName,
@@ -197,41 +209,50 @@ namespace Mitchell1.Catalog.Driver.Controls
           		UnitCore = partItem.UnitCore,
           		UnitCost = partItem.UnitCost,
           		UnitList = partItem.UnitList,
-          		UnitPrice = (partItem.UnitCost*1.5M)
-          	};
-			order.Request.Parts.Add(orderPart);
+          		UnitPrice = partItem.UnitCost*1.5M,
+				PartCategory = (PartCategory)partItem.PartCategory,
+				Size = partItem.Size,
+				SupplierName = partItem.SupplierName,
+                Metadata = partItem.Metadata,
+				ShippingCost = partItem.ShippingCost,
+				ShippingDescription = partItem.ShippingDescription
+            };
+			order.Parts.Add(orderPart);
 		}
 
-		private void AddPriceCheckPartItemToOrder(IPriceCheckPart partItem, ILocation location)
+		private void AddPriceCheckPartItemToOrder(IExtendedPriceCheckPart partItem, Location location)
 		{
-			OrderPart orderPart = new OrderPart
-          	{
-          		Description = partItem.Description,
-          		ManufacturerLineCode = partItem.ManufacturerLineCode,
-          		ManufacturerName = partItem.ManufacturerName,
-          		PartNumber = partItem.PartNumber,
-          		QuantityAvailable = 0,
-          		QuantityOrdered = 0,
-          		QuantityRequested = partItem.QuantityRequested,
-          		Status = ""
-          	};
-			if (location != null)
+			var orderPart = new OrderPart
 			{
-				orderPart.UnitCore = location.UnitCore;
-				orderPart.UnitCost = location.UnitCost;
-				orderPart.UnitList = location.UnitList;
-				orderPart.UnitPrice = location.UnitCost * 1.5M;
-				orderPart.LocationName = location.Name;
-				orderPart.LocationId = location.Id;
-			}
-			order.Request.Parts.Add(orderPart);
+				Found = true,
+				Description = partItem.Description,
+				ManufacturerLineCode = partItem.ManufacturerLineCode,
+				ManufacturerName = partItem.ManufacturerName,
+				PartNumber = partItem.PartNumber,
+				QuantityAvailable = 0,
+				QuantityOrdered = 0,
+				QuantityRequested = partItem.QuantityRequested,
+				Status = "",
+				UnitCore = location?.UnitCore ?? 0,
+				UnitCost = location?.UnitCost ?? 0,
+				UnitList = location?.UnitList ?? 0,
+				UnitPrice = location?.UnitCost * 1.5M ?? 0,
+				LocationName = location?.Name,
+				LocationId = location?.Id,
+				Metadata = partItem.Metadata,
+				SupplierName = location?.SupplierName,
+				ShippingDescription = location?.ShippingDescription,
+				ShippingCost = location?.ShippingCost ?? 0,
+			};
+			order.Parts.Add(orderPart);
 		}
 
-		private void AddPriceCheckAlternatePartItemToOrder(IPriceCheckAlternatePart partItem, IPriceCheckPart parentPart,
-			ILocation location)
+		private void AddPriceCheckAlternatePartItemToOrder(IExtendedPriceCheckAlternatePart partItem, IExtendedPriceCheckPart parentPart,
+			Location location)
 		{
 			OrderPart orderPart = new OrderPart
           	{
+				Found = true,
           		Description = partItem.Description,
           		ManufacturerLineCode = partItem.ManufacturerLineCode,
           		ManufacturerName = partItem.ManufacturerName,
@@ -240,14 +261,18 @@ namespace Mitchell1.Catalog.Driver.Controls
           		QuantityOrdered = 0,
           		QuantityRequested = parentPart.QuantityRequested,
           		Status = "",
-          		UnitCore = location.UnitCore,
-          		UnitCost = location.UnitCost,
-          		UnitList = location.UnitList,
-          		UnitPrice = (location.UnitCost*1.5M),
-          		LocationName = location.Name,
-          		LocationId = location.Id
+          		UnitCore = location?.UnitCore ?? 0,
+          		UnitCost = location?.UnitCost ?? 0,
+          		UnitList = location?.UnitList ?? 0,
+          		UnitPrice = (location?.UnitCost ?? 0)*1.5M,
+          		LocationName = location?.Name,
+          		LocationId = location?.Id,
+                Metadata = partItem.Metadata,
+				SupplierName = location?.SupplierName,
+				ShippingDescription = location?.ShippingDescription,
+				ShippingCost = location?.ShippingCost ?? 0
           	};
-			order.Request.Parts.Add(orderPart);
+			order.Parts.Add(orderPart);
 		}
 
         private void setButtonState()
@@ -263,13 +288,13 @@ namespace Mitchell1.Catalog.Driver.Controls
                 {
                     foreach (TreeNode nodePart in nodeMain.Nodes)
                     {
-                        if (nodePart.Checked && nodePart.Tag is IPartItem)
+                        if (nodePart.Checked && nodePart.Tag is PartItem)
                         {
                         	countCartItems++;
                         }
-						else if (nodePart.Checked && nodePart.Tag is IPriceCheckPart)
+						else if (nodePart.Checked && nodePart.Tag is PriceCheckPart part)
                         {
-							if (((IPriceCheckPart)nodePart.Tag).Found)
+							if (part.Found)
 							{
 								countPriceCheckFoundItems++;
 							}
@@ -278,11 +303,11 @@ namespace Mitchell1.Catalog.Driver.Controls
 								countPriceCheckNotFoundItems++;
 							}
                         }
-						else if (!nodePart.Checked && nodePart.Tag is IPriceCheckPart)
+						else if (!nodePart.Checked && nodePart.Tag is PriceCheckPart)
 						{
 							foreach (TreeNode altParts in nodePart.Nodes)
 							{
-								if(altParts.Checked && altParts.Tag is IPriceCheckAlternatePart)
+								if(altParts.Checked && altParts.Tag is PriceCheckAlternatePart)
 								{
 									countPriceCheckAltItems++;
 								}
@@ -310,7 +335,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 		private void ShowDeliveryOptions()
 		{
 			// Show the delivery options?
-            deliveryMethodLabel.Visible = (buttonOrderParts.Enabled && catalog.DeliveryMethod != null);
+            deliveryMethodLabel.Visible = (buttonOrderParts.Enabled && catalog.ShowsDeliverWillCall);
 		}
 
 		private void ShowOrderMessage()
@@ -372,7 +397,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 
 		private void SetDeliveryMethodOptions()
 		{
-			if (catalog != null && catalog.DeliveryMethod != null)
+			if (catalog != null && catalog.ShowsDeliverWillCall)
 			{
 			    radioButtonDeliver.Checked = true;
 			    radioButtonWillCall.Checked = false;
@@ -402,7 +427,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 					parts.Checked = e.Node.Checked;
 				}
 			}
-			else if (e.Node.Tag is IPriceCheckAlternatePart)
+			else if (e.Node.Tag is PriceCheckAlternatePart)
 			{
 				if (e.Node.Checked)
 				{
@@ -429,14 +454,14 @@ namespace Mitchell1.Catalog.Driver.Controls
 				}
 
 			}
-			else if (e.Node.Tag is IPriceCheckPart)
+			else if (e.Node.Tag is PriceCheckPart)
 			{
 				if (e.Node.Checked)
 				{
 					bool isLocationSelected = false;
 					foreach (TreeNode subNode in e.Node.Nodes)
 					{
-						if (subNode.Tag is IPriceCheckAlternatePart)
+						if (subNode.Tag is PriceCheckAlternatePart)
 						{
 							subNode.Checked = false;
 						}
@@ -457,14 +482,14 @@ namespace Mitchell1.Catalog.Driver.Controls
 				{
 					foreach (TreeNode locationNode in e.Node.Nodes)
 					{
-						if (locationNode.Tag is ILocation)
+						if (locationNode.Tag is Location)
 						{
 							locationNode.Checked = false;
 						}
 					}
 				}
 			}
-			else if (e.Node.Tag is ILocation)
+			else if (e.Node.Tag is Location)
 			{
 				if (e.Node.Checked)
 				{
@@ -473,7 +498,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 					{
 						if (subNodes != e.Node)
 						{
-							if (subNodes.Tag is IPriceCheckAlternatePart)
+							if (subNodes.Tag is PriceCheckAlternatePart)
 							{
 								subNodes.Checked = false;
 							}
@@ -489,22 +514,22 @@ namespace Mitchell1.Catalog.Driver.Controls
 
 		private void treeViewCart_BeforeCheck(object sender, TreeViewCancelEventArgs e)
 		{
-			if (catalog != null && e.Node.Tag is IPartItem && !catalog.AllowsBlankManufacturerCode)
+			if (catalog != null && e.Node.Tag is PartItem && !catalog.AllowsBlankManufacturerCode)
 			{
-				IPartItem part = (IPartItem)e.Node.Tag;
+				var part = (PartItem)e.Node.Tag;
 				if (part.ManufacturerLineCode == string.Empty)
 				{
 					e.Cancel = true;
 				}
 			}
-			else if (e.Node.Tag is ILocation)
+			else if (e.Node.Tag is Location)
 			{
 				if (e.Node.Checked && e.Node.Parent.Checked)
 				{
 					int taggedLocationsCount = 0;
 					foreach (TreeNode node in e.Node.Parent.Nodes)
 					{
-						if (node.Tag is ILocation && node.Checked)
+						if (node.Tag is Location && node.Checked)
 						{
 							taggedLocationsCount++;
 						}
@@ -534,11 +559,14 @@ namespace Mitchell1.Catalog.Driver.Controls
 					}
 				}
 			}
-			PriceCheckHandlingErrors();
-			foreach (PriceCheckPart priceCheckPart in priceCheck.Parts)
+
+			if (PriceCheckHandlingErrors())
 			{
-				TreeNode part = treeNodes[priceCheckPart.GridIndex - 1];
-				AddPriceCheckPartToTree(part, priceCheckPart);
+				foreach (var priceCheckPart in priceCheck.Parts)
+				{
+					TreeNode part = treeNodes[priceCheckPart.GridIndex - 1];
+					AddPriceCheckPartToTree(part, priceCheckPart);
+				}
 			}
 			treeViewCart.ExpandAll();
 		}
@@ -546,13 +574,14 @@ namespace Mitchell1.Catalog.Driver.Controls
     	private static PriceCheckPart ConvertToPriceCheckPart(TreeNode part)
     	{
     		PriceCheckPart priceCheckPart;
-    		if (part.Tag is IPartItem)
+    		if (part.Tag is PartItem)
     		{
-    			priceCheckPart = ConvertToPriceCheckPart((IPartItem) part.Tag);
+    			priceCheckPart = ConvertToPriceCheckPart((PartItem) part.Tag);
     		}
-    		else if (part.Tag is PriceCheckPart)
+    		else if (part.Tag is PriceCheckPart tag)
     		{
-    			priceCheckPart = (PriceCheckPart) part.Tag;
+    			priceCheckPart = tag;
+                priceCheckPart.Metadata = null;
     			priceCheckPart.Locations.Clear();
     			priceCheckPart.AlternateParts.Clear();
     		}
@@ -563,14 +592,11 @@ namespace Mitchell1.Catalog.Driver.Controls
     		return priceCheckPart;
     	}
 
-    	private void PriceCheckHandlingErrors()
+    	private bool PriceCheckHandlingErrors()
     	{
 	        try
 	        {
-		        if (catalog.HostShowsProgressOnPriceCheck)
-			        throw new Exception("Online Catalogs show their own progress UI");
-
-				catalog.PriceCheck(priceCheck);
+				return catalog.PriceCheck(priceCheck);
 	        }
 	        catch (OperationCanceledException)
 	        {
@@ -591,7 +617,9 @@ namespace Mitchell1.Catalog.Driver.Controls
 			{
 				catalogExceptionHandler.ShowGeneralCatalogExceptionMessage(ex.Message);
 			}
-		}
+
+            return false;
+        }
 
 
     	private void buttonOrderParts_Click(object sender, EventArgs e)
@@ -600,47 +628,47 @@ namespace Mitchell1.Catalog.Driver.Controls
 		        textBoxPONumber.Text = $"#{startingPO}";
 
 			buttonOrderTracking.Text = "Track Order...";
-			order.Request.Parts = new List<IOrderPart>();
-			order.Request.PurchaseOrderNumber = textBoxPONumber.Text;
+			order.Parts.Clear();
+			order.PurchaseOrderNumber = textBoxPONumber.Text;
 
 			var treeNodes = treeViewCart.Nodes["Parts"].Nodes;
 			for (int i = 0; i < treeNodes.Count; i++)
     		{
 				TreeNode part = treeNodes[i];
-    			if (part.Checked && part.Tag is IPartItem)
+    			if (part.Checked && part.Tag is PartItem partItem)
     			{
-    				AddPartItemToOrder((IPartItem) part.Tag);
+    				AddPartItemToOrder(partItem);
     			}
-    			else if (part.Tag is IPriceCheckPart)
+    			else if (part.Tag is PriceCheckPart)
     			{
     				if (part.Checked)
     				{
-    					ILocation location = null;
+	                    Location location = null;
     					foreach (TreeNode locationNode in part.Nodes)
     					{
-    						if (locationNode.Tag is ILocation && locationNode.Checked)
+    						if (locationNode.Tag is Location locationNodeTag && locationNode.Checked)
     						{
-    							location = (ILocation) locationNode.Tag;
+    							location = locationNodeTag;
     						}
     					}
-    					AddPriceCheckPartItemToOrder((PriceCheckPart) part.Tag, location);
+    					AddPriceCheckPartItemToOrder((IExtendedPriceCheckPart) part.Tag, location);
     				}
     				else
     				{
     					foreach (TreeNode subnode in part.Nodes)
     					{
-    						if (subnode.Tag is IPriceCheckAlternatePart && subnode.Checked)
+    						if (subnode.Tag is PriceCheckAlternatePart && subnode.Checked)
     						{
-    							ILocation location = null;
+	                            Location location = null;
     							foreach (TreeNode locationNode in subnode.Nodes)
     							{
-    								if (locationNode.Tag is ILocation && locationNode.Checked)
+    								if (locationNode.Tag is Location locationNodeTag && locationNode.Checked)
     								{
-    									location = (ILocation) locationNode.Tag;
+    									location = locationNodeTag;
     								}
     							}
-    							AddPriceCheckAlternatePartItemToOrder((PriceCheckAlternatePart) subnode.Tag,
-    							                                      (PriceCheckPart) part.Tag, location);
+    							AddPriceCheckAlternatePartItemToOrder((IExtendedPriceCheckAlternatePart) subnode.Tag,
+    							                                      (IExtendedPriceCheckPart) part.Tag, location);
     						}
     					}
     				}
@@ -648,24 +676,14 @@ namespace Mitchell1.Catalog.Driver.Controls
     		}
     		if (catalog.SupportsOrderMessage)
 			{
-				order.Request.OrderMessage = orderMessage.Text;
+				order.OrderMessage = orderMessage.Text;
 			}
-			if (catalog.DeliveryMethod != null)
-			{
-			    order.Request.DeliveryOption = ToCatalogShippingOption(radioButtonDeliver.Checked ?POShipVia.Deliver : POShipVia.WillCall);
-			}
-			else
-			{
-			    order.Request.DeliveryOption = ToCatalogShippingOption(POShipVia.Deliver);
-			}
+			order.DeliveryOption = ToCatalogShippingOption(!catalog.ShowsDeliverWillCall || radioButtonDeliver.Checked ? POShipVia.Deliver : POShipVia.WillCall);
 
 			try
 			{
-				if (catalog.HostShowsProgressOnPriceCheck)
-					throw new Exception("Online Catalogs show their own progress UI");
-
-				order.Response = catalog.OrderParts(order.Request);
-				if (order.Response != null)
+				ordered = catalog.OrderParts(order);
+				if (ordered)
 					AddOrderToTree();
 			}
 			catch (OperationCanceledException)
@@ -693,8 +711,6 @@ namespace Mitchell1.Catalog.Driver.Controls
 			textBoxPONumber.Text = $"#{++startingPO}";
 		}
 
-
-
 		#endregion
 
 	    public string ToCatalogShippingOption(POShipVia option)
@@ -707,7 +723,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 			if (e.KeyChar == (char)Keys.Delete)
 			{
 				TreeNode node = treeViewCart.SelectedNode;
-				if (node.Tag is IPriceCheckPart)
+				if (node.Tag is PriceCheckPart)
 				{
 					treeViewCart.Nodes.Remove(node);
 				}
@@ -716,13 +732,13 @@ namespace Mitchell1.Catalog.Driver.Controls
 
 		private void buttonOrderTracking_Click(object sender, EventArgs e)
 		{
-			if (order.Response == null)
+			if (!ordered)
 			{
 				MessageBox.Show("No Order Processed", "Error");
 				return;
 			}
 
-			if (string.IsNullOrWhiteSpace(order.Response.TrackingNumber))
+			if (string.IsNullOrWhiteSpace(order.TrackingNumber))
 			{
 				MessageBox.Show("Order Has No Tracking #", "Error");
 				return;
@@ -730,7 +746,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 
 			try
 			{
-				var details = catalog.RequestOrderTracking(order.Response.TrackingNumber);
+				var details = catalog.RequestOrderTracking(order.TrackingNumber);
 				if (details == null)
 				{
 					MessageBox.Show("Unable to get tracking status", "Error");
@@ -763,6 +779,4 @@ namespace Mitchell1.Catalog.Driver.Controls
         WillCall = 0,
         Deliver = 1
     }
-
-	
 }

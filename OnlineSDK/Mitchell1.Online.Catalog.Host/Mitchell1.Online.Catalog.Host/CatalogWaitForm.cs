@@ -56,7 +56,15 @@ namespace Mitchell1.Online.Catalog.Host
 			}
 		}
 
-		public Func<CancellationToken, Task> Action { get; set; }
+		private Func<CancellationToken, Task> Action { get; set; }
+
+		public T GetResponse<T>(Func<CancellationToken, Task<T>> func)
+		{
+			T result = default;
+			Action = async token => { result = await func(token); };
+			ShowDialog();
+			return result;
+		}
 
 		public Exception Error { get; private set; }
 	}

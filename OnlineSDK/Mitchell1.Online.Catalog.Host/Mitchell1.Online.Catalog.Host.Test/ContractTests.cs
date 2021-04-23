@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Mitchell1.Online.Catalog.Host.Orders;
+using Mitchell1.Online.Catalog.Host.TransferObjects;
 
 namespace Mitchell1.Online.Catalog.Host.Test
 {
@@ -11,8 +11,8 @@ namespace Mitchell1.Online.Catalog.Host.Test
 		{
 			// Test ensures that interfaces used in data contracts do not change - would negatively affect integration with existing catalogs
 			// Do not rename properties:
-			ValidateProperty(nameof(TrackingRequestResponse), nameof(TrackingRequestResponse.ExternalTrackingUrl), "ExternalTrackingUrl");
-			ValidateProperty(nameof(TrackingRequestResponse), nameof(TrackingRequestResponse.StatusDisplay), "StatusDisplay");
+			ValidateProperty(nameof(TrackingResponse), nameof(TrackingResponse.ExternalTrackingUrl), "ExternalTrackingUrl");
+			ValidateProperty(nameof(TrackingResponse), nameof(TrackingResponse.StatusDisplay), "StatusDisplay");
 		}
 
 		private void ValidateProperty(string className, string actualName, string expectedName)

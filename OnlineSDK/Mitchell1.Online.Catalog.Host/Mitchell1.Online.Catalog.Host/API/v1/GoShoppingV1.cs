@@ -6,130 +6,98 @@ using System.Dynamic;
 using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
-using Mitchell1.Browser.Interfaces;
 using Mitchell1.Catalog.Framework.Interfaces;
-using Mitchell1.Online.Catalog.Host.Controllers;
 using Mitchell1.Online.Catalog.Host.TransferObjects;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using static Mitchell1.Online.Catalog.Host.API.v1.ParseHelper;
+using PartCategory = Mitchell1.Online.Catalog.Host.TransferObjects.PartCategory;
 
 namespace Mitchell1.Online.Catalog.Host.API.v1
 {
-    public class GoShoppingV1 : IEmbeddedCatalogTransferController
+	public class GoShoppingV1 : CustomWebPageControllerHandleForbidden
     {
         private readonly OnlineCatalogInformation onlineCatalogInformation;
-        private EventHandler<WebControlNavigatedEventArgs> eventHandler;
 
         private string GoShoppingUrl => onlineCatalogInformation.GetAbsoluteUrl(CatalogApiPart.GoShopping);
 
-        public GoShoppingV1(OnlineCatalogInformation catalogInformation)
-        {
-            onlineCatalogInformation = catalogInformation;
-        }
+        public GoShoppingV1(OnlineCatalogInformation catalogInformation) => onlineCatalogInformation = catalogInformation;
 
-        public event EventHandler<bool> RequestCompleted;
-
-        public void AttachBrowser<T>(IWebBrowserControl<T> browser)
-        {
-            eventHandler = delegate(object sender, WebControlNavigatedEventArgs args)
-            {
-                // Ignore non main frame and internal http codes
-                if (args.HttpCode != 0 && args.Frame.Identifier == browser.MainFrame?.Identifier)
-                {
-                    HttpResponseCode = args.HttpCode;
-
-                    // 403 we treat special, close window and throw auth error
-                    if (args.HttpCode == 403)
-                    {
-                        RequestCompleted?.Invoke(this, false);
-                    }
-                }
-            };
-
-            browser.JavaScriptRegisterActionCallback("transfer", TransferCart);
-            browser.JavaScriptRegisterActionCallback("cancel", CancelChanges);
-            browser.Navigated += eventHandler;
-
-            browser.Url = BuildGoShoppingCatalogUrl(Vendor, Vehicle);
-        }
-
-        public void DetachBrowser<T>(IWebBrowserControl<T> browser)
-        {
-            browser.Navigated -= eventHandler;
-            browser.JavaScriptUnregisterAction("transfer");
-            browser.JavaScriptUnregisterAction("cancel");
-        }
+        protected override string ActionLabel { get; } = "transfer";
 
         public IVendor Vendor { get; set; }
         public IHostData HostData { get; set; }
-        public ShoppingCart Cart { get; set; }
+        public ShoppingCart Cart { get; private set; }
         public IVehicle Vehicle { get; set; }
-        public int HttpResponseCode { get; private set; }
 
-        public string BuildGoShoppingCatalogUrl(IVendor vendor, IVehicle vehicleSettings)
+        protected override string Url => BuildGoShoppingCatalogUrl();
+        private string BuildGoShoppingCatalogUrl()
         {
-            StringBuilder url = new StringBuilder(GoShoppingUrl.Length + 100);
+	        StringBuilder url = new StringBuilder(GoShoppingUrl.Length + 100);
 
             // pass user authentication details to the website
             url.Append(GoShoppingUrl + "?Qualifier=");
-            url.Append(Uri.EscapeDataString(vendor.Qualifier ?? ""));
+            url.Append(Uri.EscapeDataString(Vendor.Qualifier ?? ""));
 
             // pass vehicle settings to the website
-            if (vehicleSettings != null)
+            if (Vehicle != null)
             {
-                if (!string.IsNullOrEmpty(vehicleSettings.Vin) && vehicleSettings.Vin.Length >= 17)
+                if (!string.IsNullOrEmpty(Vehicle.Vin) && Vehicle.Vin.Length >= 17)
                 {
-                    url.Append("&Vin=" + Uri.EscapeDataString(vehicleSettings.Vin));
+                    url.Append("&Vin=" + Uri.EscapeDataString(Vehicle.Vin));
                 }
 
-                if (url.AddIntPropertyIfValid(nameof(vehicleSettings.Year), vehicleSettings.Year))
+                if (url.AddIntPropertyIfValid(nameof(Vehicle.Year), Vehicle.Year))
                 {
-                    if (url.AddStringPropertyIfValid(nameof(vehicleSettings.Make), vehicleSettings.Make))
+                    if (url.AddStringPropertyIfValid(nameof(Vehicle.Make), Vehicle.Make))
                     {
-                        if (url.AddStringPropertyIfValid(nameof(vehicleSettings.Model), vehicleSettings.Model))
+                        if (url.AddStringPropertyIfValid(nameof(Vehicle.Model), Vehicle.Model))
                         {
-                            url.AddStringPropertyIfValid(nameof(vehicleSettings.SubModel), vehicleSettings.SubModel);
-                            url.AddStringPropertyIfValid(nameof(vehicleSettings.Transmission), vehicleSettings.Transmission);
-                            url.AddStringPropertyIfValid(nameof(vehicleSettings.Engine), vehicleSettings.Engine);
-                            url.AddStringPropertyIfValid(nameof(vehicleSettings.DriveType), vehicleSettings.DriveType);
-                            url.AddStringPropertyIfValid(nameof(vehicleSettings.Brake), vehicleSettings.Brake);
-                            url.AddStringPropertyIfValid(nameof(vehicleSettings.Gvw), vehicleSettings.Gvw);
-                            url.AddStringPropertyIfValid(nameof(vehicleSettings.Body), vehicleSettings.Body);
+                            url.AddStringPropertyIfValid(nameof(Vehicle.SubModel), Vehicle.SubModel);
+                            url.AddStringPropertyIfValid(nameof(Vehicle.Transmission), Vehicle.Transmission);
+                            url.AddStringPropertyIfValid(nameof(Vehicle.Engine), Vehicle.Engine);
+                            url.AddStringPropertyIfValid(nameof(Vehicle.DriveType), Vehicle.DriveType);
+                            url.AddStringPropertyIfValid(nameof(Vehicle.Brake), Vehicle.Brake);
+                            url.AddStringPropertyIfValid(nameof(Vehicle.Gvw), Vehicle.Gvw);
+                            url.AddStringPropertyIfValid(nameof(Vehicle.Body), Vehicle.Body);
                         }
                     }
                 }
 
-                url.AddIntPropertyIfValid(nameof(vehicleSettings.AcesId), vehicleSettings.AcesId);
-                url.AddIntPropertyIfValid(nameof(vehicleSettings.AcesBaseId), vehicleSettings.AcesBaseId);
-                url.AddIntPropertyIfValid(nameof(vehicleSettings.AcesEngineId), vehicleSettings.AcesEngineId);
+                url.AddIntPropertyIfValid(nameof(Vehicle.AcesId), Vehicle.AcesId);
+                url.AddIntPropertyIfValid(nameof(Vehicle.AcesBaseId), Vehicle.AcesBaseId);
+                url.AddIntPropertyIfValid(nameof(Vehicle.AcesEngineId), Vehicle.AcesEngineId);
 
-                IVehicleAcesProvider acesProvider = vehicleSettings as IVehicleAcesProvider;
-                if (acesProvider != null)
+                if (Vehicle is IVehicleAcesProvider acesProvider)
                 {
-                    url.AddIntPropertyIfValid("AcesEngineBaseId", acesProvider.GetAcesId(AcesId.EngineBaseID));
-                    url.AddIntPropertyIfValid("AcesEngineConfigId", acesProvider.GetAcesId(AcesId.EngineConfigID));
-                    url.AddIntPropertyIfValid("AcesSubmodelId", acesProvider.GetAcesId(AcesId.SubModelID));
+                    url.AddIntPropertyIfValid(nameof(TransferObjects.Vehicle.AcesEngineBaseId), acesProvider.GetAcesId(AcesId.EngineBaseID));
+                    url.AddIntPropertyIfValid(nameof(TransferObjects.Vehicle.AcesEngineConfigId), acesProvider.GetAcesId(AcesId.EngineConfigID));
+                    url.AddIntPropertyIfValid(nameof(TransferObjects.Vehicle.AcesSubmodelId), acesProvider.GetAcesId(AcesId.SubModelID));
                 }
+            }
+
+            if (HostData != null)
+            {
+	            url.AddStringPropertyIfValid(nameof(TransferObjects.HostData.ApplicationTitle), HostData.ApplicationTitle);
+	            url.AddStringPropertyIfValid(nameof(TransferObjects.HostData.ApplicationVersion), HostData.ApplicationVersion);
+	            url.AddStringPropertyIfValid(nameof(TransferObjects.HostData.LaborRate), HostData.LaborRate.ToString(CultureInfo.InvariantCulture));
+	            url.AddStringPropertyIfValid(nameof(TransferObjects.HostData.HostApiLevel), OnlineCatalogInformation.HostApiLevel.ToString());
             }
 
             return url.ToString();
         }
 
-        private void CancelChanges(object[] objects)
+        protected override bool Action(object[] objects)
         {
-            RequestCompleted?.Invoke(this, false);
-        }
-
-        private void TransferCart(object[] objects)
-        {
-            if (objects == null || objects.Length < 2 || !(objects[1] is IList) || Cart == null)
+            if (objects == null || objects.Length < 2)
             {
-                RequestCompleted?.Invoke(this, false);
-                return;
+	            return false;
             }
 
             try
             {
-                HandleShoppingCart((IList)objects[1]);
-                RequestCompleted?.Invoke(this, true);
+	            Cart = HandleShoppingCart(objects[1]);
+	            return Cart != null;
             }
             catch (Exception e)
             {
@@ -137,161 +105,212 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
                 Trace.WriteLine(msg);
                 MessageBox.Show(msg);
 
-                RequestCompleted?.Invoke(this, false);
+                return false;
             }
         }
 
-        private decimal ToDecimal(string value)
+        internal static ShoppingCart HandleShoppingCart(dynamic shoppingCart)
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                return 0;
-            }
+	        if (shoppingCart is string json)
+		        return JsonConvert.DeserializeObject<ShoppingCart>(json, new CartItemConverter());
 
-            decimal outValue;
-            if (decimal.TryParse(value, out outValue))
-            {
-                return outValue;
-            }
+	        if (shoppingCart is IList list)
+		        return ProcessListOfCartItems(list);
 
-            return 0;
+	        return null;
         }
 
-        private void HandleShoppingCart(IList onlineCart)
+        private static ShoppingCart ProcessListOfCartItems(IList onlineCart)
         {
-            foreach (dynamic cartItem in onlineCart)
-            {
-                var type = (string)cartItem.type;
-                if (String.IsNullOrEmpty(type))
-                {
-                    continue;
-                }
+	        if (onlineCart == null)
+		        return null;
 
-                if (type == "IPartItem2")
-                {
-	                var part = new PartItem
-	                {
-		                PartNumber = cartItem.PartNumber,
-		                ManufacturerLineCode = cartItem.ManufacturerLineCode,
-		                ManufacturerName = cartItem.ManufacturerName,
-		                Description = cartItem.Description,
-		                UnitList = ToDecimal(cartItem.UnitList),
-		                UnitCost = ToDecimal(cartItem.UnitCost),
-		                UnitCore = ToDecimal(cartItem.UnitCore),
-		                Quantity = ToDecimal(cartItem.Quantity),
-		                IsTire = cartItem.IsTire,
-		                Size = cartItem.Size,
-		                UpcCode = cartItem.UpcCode,
-		                PartCategory = ParseCategory(cartItem)
-	                };
+			var cart = new ShoppingCart();
+			foreach (dynamic cartItem in onlineCart)
+			{
+				var type = (string) cartItem.type;
+				if (string.IsNullOrEmpty(type))
+				{
+					continue;
+				}
 
-	                Cart.Items.Add(part);
-                }
-                else if (type == "IOrder")
-                {
-                    var newOrder = HandleOrderList(cartItem);
-                    if (newOrder != null)
-	                    Cart.Orders.Add(newOrder);
-                }
-                else if (type == "INoteItem")
-                {
-	                Cart.Items.Add(new NoteItem { Note = cartItem.Note });
-                }
-                else if (type == "ILaborItem")
-                {
-	                var labor = new LaborItem
-	                {
-		                Description = cartItem.Description,
-		                Hours = ToDecimal(cartItem.Hours),
-		                Price = ToDecimal(cartItem.Price)
-	                };
+				if (type == "IPartItem2")
+				{
+					var part = new PartItem
+					{
+						PartNumber = cartItem.PartNumber,
+						ManufacturerLineCode = cartItem.ManufacturerLineCode,
+						ManufacturerName = cartItem.ManufacturerName,
+						Description = cartItem.Description,
+						UnitList = ToDecimal(cartItem.UnitList),
+						UnitCost = ToDecimal(cartItem.UnitCost),
+						UnitCore = ToDecimal(cartItem.UnitCore),
+						Quantity = ToDecimal(cartItem.Quantity),
+						IsTire = cartItem.IsTire,
+						Size = GetPropertyOrNull(cartItem, nameof(PartItem.Size)),
+						UpcCode = GetPropertyOrNull(cartItem, nameof(PartItem.UpcCode)),
+						PartCategory = ParseCategory(cartItem),
+						SupplierName = GetPropertyOrNull(cartItem, nameof(PartItem.SupplierName)),
+						Metadata = GetPropertyOrNull(cartItem, nameof(PartItem.Metadata)),
+						ShippingDescription = GetPropertyOrNull(cartItem, nameof(PartItem.ShippingDescription)),
+						ShippingCost = ToDecimal(GetPropertyOrNull(cartItem, nameof(PartItem.ShippingCost))),
+					};
 
-	                Cart.Items.Add(labor);
-                }
-            }
-        }
+					cart.Add(part);
+				}
+				else if (type == "IOrder")
+				{
+					ShoppingCartOrder newOrder = HandleOrderList(cartItem);
+					if (newOrder != null)
+						cart.Add(newOrder);
+				}
+				else if (type == "INoteItem")
+				{
+					cart.Add(new NoteItem {Note = cartItem.Note});
+				}
+				else if (type == "ILaborItem")
+				{
+					var labor = new LaborItem
+					{
+						Description = cartItem.Description,
+						Hours = ToDecimal(cartItem.Hours),
+						Price = ToDecimal(cartItem.Price)
+					};
 
-        private bool ExpandoHasProperty(ExpandoObject expando, string propertyName)
-        {
-            try
-            {
-                if (expando == null)
-                    return false;
+					cart.Add(labor);
+				}
+			}
 
-                if (((IDictionary<string, object>)expando).ContainsKey(propertyName))
-                    return true;
-            }
-            catch (Exception)
-            {
-            }
+			return cart;
+		}
 
-            return false;
-        }
+        private static PartCategory ParseCategory(dynamic partItem)
+		{
+			if (ExpandoHasProperty(partItem, "PartCategory") && !string.IsNullOrEmpty(partItem.PartCategory))
+			{
+				if (Enum.TryParse(partItem.PartCategory, true, out PartCategory category))
+					return category;
+			}
 
-        private PartCategory ParseCategory(dynamic partItem)
-        {
-            if (ExpandoHasProperty(partItem, "PartCategory") && !string.IsNullOrEmpty(partItem.PartCategory))
-            {
-	            if (Enum.TryParse(partItem.PartCategory, true, out PartCategory category))
-                    return category;
-            }
+			return PartCategory.Unspecified;
+		}
 
-            return PartCategory.Unspecified;
-        }
+		private static ShoppingCartOrder HandleOrderList(dynamic order)
+		{
+			var orderedPartsList = (IList) order.Parts;
+			if (orderedPartsList.Count == 0)
+				return null;
 
-        private ShoppingCartOrder HandleOrderList(dynamic order)
-        {
-            var orderedPartsList = (IList)order.Parts;
-            if (orderedPartsList.Count == 0)
-                return null;
+			var transferOrder = new ShoppingCartOrder
+			{
+				OrderMessage = order.OrderMessage ?? "",
+				DeliveryOptions = GetPropertyOrNull(order, "DeliveryOptions"),
+				ConfirmationNumber = order.ConfirmationNumber ?? "",
+				Parts = new List<ShoppingCartOrderPart>(),
+			};
 
-	        var transferOrder = new ShoppingCartOrder
-	        {
-		        OrderMessage = order.OrderMessage ?? "",
-		        DeliveryOption = order.DeliveryOptions,
-		        ConfirmationNumber = order.ConfirmationNumber ?? ""
-	        };
+			if (ExpandoHasProperty(order, "TrackingNumber"))
+			{
+				var tracking = (string) order.TrackingNumber;
+				if (!string.IsNullOrWhiteSpace(tracking) && tracking.Length <= 20)
+					transferOrder.TrackingNumber = tracking;
+			}
 
-	        if (ExpandoHasProperty(order, "TrackingNumber"))
-	        {
-		        var tracking = (string) order.TrackingNumber;
-		        if (!string.IsNullOrWhiteSpace(tracking) && tracking.Length <= 20)
-			        transferOrder.TrackingNumber = tracking;
-	        }
-
-	        foreach (dynamic orderedPart in orderedPartsList)
-	        {
-		        var newPart = new ShoppingCartOrderPart
-		        {
-			        Found = true,
-			        LocationId = orderedPart.LocationId,
-			        LocationName = orderedPart.LocationName,
-			        Status = orderedPart.Status,
-			        PartNumber = orderedPart.PartNumber,
-			        ManufacturerLineCode = orderedPart.ManufacturerLineCode,
-			        ManufacturerName = orderedPart.ManufacturerName,
-			        Description = orderedPart.Description,
-			        UnitList = ToDecimal(orderedPart.UnitList),
-			        UnitCost = ToDecimal(orderedPart.UnitCost),
-			        UnitCore = ToDecimal(orderedPart.UnitCore),
-			        QuantityRequested = ToDecimal(orderedPart.QuantityRequested),
-			        QuantityOrdered = ToDecimal(orderedPart.QuantityOrdered),
-			        QuantityAvailable = ToDecimal(orderedPart.QuantityAvailable),
-			        PartCategory = ParseCategory(orderedPart)
-		        };
+			foreach (dynamic orderedPart in orderedPartsList)
+			{
+				var newPart = new ShoppingCartOrderPart
+				{
+					Found = true,
+					LocationId = GetPropertyOrNull(orderedPart, nameof(ShoppingCartOrderPart.LocationId)),
+					LocationName = GetPropertyOrNull(orderedPart, nameof(ShoppingCartOrderPart.LocationName)),
+					Status = orderedPart.Status,
+					PartNumber = orderedPart.PartNumber,
+					ManufacturerLineCode = orderedPart.ManufacturerLineCode,
+					ManufacturerName = orderedPart.ManufacturerName,
+					Description = orderedPart.Description,
+					UnitList = ToDecimal(orderedPart.UnitList),
+					UnitCost = ToDecimal(orderedPart.UnitCost),
+					UnitCore = ToDecimal(orderedPart.UnitCore),
+					QuantityRequested = ToDecimal(orderedPart.QuantityRequested),
+					QuantityOrdered = ToDecimal(orderedPart.QuantityOrdered),
+					QuantityAvailable = ToDecimal(orderedPart.QuantityAvailable),
+					PartCategory = ParseCategory(orderedPart),
+					SupplierName = GetPropertyOrNull(orderedPart, nameof(PartItem.SupplierName)),
+					Metadata = GetPropertyOrNull(orderedPart, nameof(PartItem.Metadata)),
+					ShippingDescription = GetPropertyOrNull(orderedPart, nameof(PartItem.ShippingDescription)),
+					ShippingCost = ToDecimal(GetPropertyOrNull(orderedPart, nameof(PartItem.ShippingCost))),
+				};
 
 
-		        if (ExpandoHasProperty(orderedPart, nameof(ICartOrderedPart.Size)))
-                    newPart.Size = orderedPart.Size ?? "";               
+				if (ExpandoHasProperty(orderedPart, nameof(ICartOrderedPart.Size)))
+					newPart.Size = orderedPart.Size ?? "";
 
-                transferOrder.Parts.Add(newPart);
-            }
+				transferOrder.Parts.Add(newPart);
+			}
 
-            return transferOrder;
-        }
+			return transferOrder;
+		}
     }
 
-    internal static class StringBuilderUrlExtensions
+	public class CartItemConverter : JsonConverter
+	{
+		public override bool CanConvert(Type objectType) => typeof(CartItem).IsAssignableFrom(objectType);
+		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		{
+			var jsonObject = JObject.Load(reader);
+			string type = (string)jsonObject[nameof(CartItem.type)];
+			var item = CreateCartItem();
+			serializer.Populate(jsonObject.CreateReader(), item);
+			return item;
+
+			CartItem CreateCartItem()
+			{
+				switch (type)
+				{
+					case "IPartItem2" : return new PartItem();
+					case "INoteItem" : return new NoteItem();
+					case "ILaborItem" : return new LaborItem();
+					case "IOrder" : return new ShoppingCartOrder();
+					default: return null;
+				}
+			}
+		}
+		public override bool CanWrite => false;
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {}
+	}
+
+	public static class ParseHelper
+	{
+		public static decimal ToDecimal(dynamic value) => value is string stringValue
+			? !string.IsNullOrEmpty(stringValue) && decimal.TryParse(stringValue, out var outValue) ? outValue : 0
+			: value != null ? Convert.ToDecimal(value) : 0;
+
+		public static bool ExpandoHasProperty(ExpandoObject expando, string propertyName)
+		{
+			try
+			{
+				return expando != null && ((IDictionary<string, object>) expando).ContainsKey(propertyName);
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
+		public static dynamic GetPropertyOrNull(ExpandoObject expando, string propertyName)
+		{
+			try
+			{
+				return expando != null && ((IDictionary<string, object>) expando).TryGetValue(propertyName, out var value) ? value : null;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+	}
+
+	internal static class StringBuilderUrlExtensions
     {
         public static bool AddIntPropertyIfValid(this StringBuilder sb, string propertyName, int property)
         {

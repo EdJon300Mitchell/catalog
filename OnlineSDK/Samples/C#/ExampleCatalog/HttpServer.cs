@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using Nancy;
-using Nancy.Hosting.Self;
-using Nancy.TinyIoc;
 using System.Net.NetworkInformation;
+using Nancy;
 using Nancy.Bootstrapper;
 using Nancy.Conventions;
+using Nancy.Hosting.Self;
 using Nancy.Json;
+using Nancy.TinyIoc;
 
 namespace ExampleCatalog
 {

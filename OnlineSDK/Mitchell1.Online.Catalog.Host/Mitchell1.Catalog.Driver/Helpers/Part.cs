@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Generic;
-using Mitchell1.Catalog.Framework.Interfaces;
 using System.ComponentModel;
+using Mitchell1.Catalog.Framework.Interfaces;
+using Mitchell1.Online.Catalog.Host;
+using PartCategory = Mitchell1.Catalog.Framework.Interfaces.PartCategory;
 
 namespace Mitchell1.Catalog.Driver.Helpers
 {
-	internal class PriceCheckPart : IPriceCheckPart
-    {
-		private readonly IList<ILocation> locations = new List<ILocation>();
-		private ILocation selectedLocation;
+	internal class PriceCheckPart : IExtendedPriceCheckPart
+	{
+		private readonly LocationList locations = new LocationList();
+		private Location selectedLocation;
+		private readonly AlternatePartsList alternateParts = new AlternatePartsList();
 
-		private readonly ILocation EmptyLocation = new Location();
+		private readonly Location emptyLocation = new Location();
 
-        #region Constructors
-
-        public PriceCheckPart() 
+		public PriceCheckPart() 
         {
         	Found = false;
             PartNumber = string.Empty;
@@ -22,15 +23,10 @@ namespace Mitchell1.Catalog.Driver.Helpers
             ManufacturerName = string.Empty;
             Description = string.Empty;
             QuantityRequested = decimal.Zero;
-			QuantityOrdered = decimal.Zero;
-			AlternateParts = new List<IPriceCheckAlternatePart>();
-            GridIndex = 0;
             Status = string.Empty;
         }
 
-        #endregion
-
-        #region IPriceCheckPart Members
+		#region IExtendedPriceCheckPart Members
 
 		[DescriptionAttribute("Was the part found in the catalog?")]
 		public bool Found { get; set; }
@@ -38,12 +34,10 @@ namespace Mitchell1.Catalog.Driver.Helpers
 		[DescriptionAttribute("The status for the part as returned by the catalog")]
 		public string Status { get; set; }
 
-		[DescriptionAttribute(
-			"The part number for this Price Check part.  Together with the ManufacturerLineCode, it uniquely identifies a part")]
+		[DescriptionAttribute("The part number for this Price Check part.  Together with the ManufacturerLineCode, it uniquely identifies a part")]
 		public string PartNumber { get; set; }
 
-		[DescriptionAttribute(
-			"The manufacturer line code from the catalog.  Together with the PartNumber, it uniquely identifies a part")]
+		[DescriptionAttribute("The manufacturer line code from the catalog.  Together with the PartNumber, it uniquely identifies a part")]
 		public string ManufacturerLineCode { get; set; }
 
 		[DescriptionAttribute("The manufacturer name for the Price Check part (like: \"Good Year\")")]
@@ -55,77 +49,113 @@ namespace Mitchell1.Catalog.Driver.Helpers
 		[DescriptionAttribute("The number of units requested in the Price Check request")]
 		public decimal QuantityRequested { get; set; }
 
+		[DescriptionAttribute("A list of alternate locations that this part is available from")]
+		public IList<Location> Locations => locations;
+
+		IList<ILocation> IPriceCheckPart.Locations => locations;
+
+		[DescriptionAttribute("The metadata contains JSON supplier information.")]
+		public string Metadata { get; set; }
+
+		[DescriptionAttribute("A list of alternate parts which may be substituted for this Price Check part")]
+		public IList<IExtendedPriceCheckAlternatePart> AlternateParts => alternateParts;
+
+		IList<IPriceCheckAlternatePart> IPriceCheckPart.AlternateParts => alternateParts;
+
+		[DescriptionAttribute("The location selected from the list of available locations")]
+		public ILocation SelectedLocation
+		{
+			get
+			{
+				if (selectedLocation == null || selectedLocation == emptyLocation)
+				{
+					if (Locations.Count > 0)
+					{
+						selectedLocation = Locations[0];
+					}
+					else
+					{
+						if (selectedLocation == null)
+						{
+							selectedLocation = emptyLocation;
+						}
+					}
+				}
+				return selectedLocation;
+			}
+			set => selectedLocation = (Location)value;
+		}
+
+		public ILocation NewLocation() => new Location();
+
+		public void AddLocation(ILocation location) => locations.Add(location);
+
+		public IExtendedPriceCheckAlternatePart NewAlternatePart() => new PriceCheckAlternatePart();
+
+		IPriceCheckAlternatePart IPriceCheckPart.NewAlternatePart() => NewAlternatePart();
+
+		public void AddAlternatePart(IPriceCheckAlternatePart partItem) => alternateParts.Add(partItem);
+
+		#endregion
+
 		[DescriptionAttribute("The number of units ordered in the Price Check request")]
 		public decimal QuantityOrdered { get; set; }
 
 		[DescriptionAttribute("The primary location for the part.  Where the part will be delivered from")]
 		public string LocationName
-        {
-            get { return SelectedLocation.Name; }
-            set { SelectedLocation.Name = value; }
-        }
+		{
+			get { return SelectedLocation.Name; }
+			set { SelectedLocation.Name = value; }
+		}
 
 		[DescriptionAttribute("The primary location identifier.  Uniquely identifies the delivery source")]
-        public string LocationId
-        {
-            get { return SelectedLocation.Id; }
-            set { SelectedLocation.Id = value; }
-        }
+		public string LocationId
+		{
+			get { return SelectedLocation.Id; }
+			set { SelectedLocation.Id = value; }
+		}
 
 		[DescriptionAttribute("The list price for a single unit (of quantity) for the Price Check part")]
-        public decimal UnitList
-        {
-            get { return SelectedLocation.UnitList; }
-            set { SelectedLocation.UnitList = value; }
-        }
+		public decimal UnitList
+		{
+			get { return SelectedLocation.UnitList; }
+			set { SelectedLocation.UnitList = value; }
+		}
 
 		[DescriptionAttribute("The unit cost for a single quantity of the Price Check part")]
-        public decimal UnitCost
-        {
-            get { return SelectedLocation.UnitCost; }
-            set { SelectedLocation.UnitCost = value; }
-        }
+		public decimal UnitCost
+		{
+			get { return SelectedLocation.UnitCost; }
+			set { SelectedLocation.UnitCost = value; }
+		}
 
 		[DescriptionAttribute("The core exchange cost for the Price Check part")]
-        public decimal UnitCore
-        {
-            get { return SelectedLocation.UnitCore; }
-            set { SelectedLocation.UnitCore = value; }
-        }
+		public decimal UnitCore
+		{
+			get { return SelectedLocation.UnitCore; }
+			set { SelectedLocation.UnitCore = value; }
+		}
 
-		[DescriptionAttribute("The unit price for a single quantity of the Price Check part")]
-		public decimal UnitPrice { get; set; }
+		[DescriptionAttribute("Uniquely identifies (within this catalog) the source supplier for this part. This will be displayed to the user.")]
+		public string SupplierName
+		{
+			get => selectedLocation.SupplierName;
+			set => selectedLocation.SupplierName = value;
+		}
 
-		[DescriptionAttribute("A list of alternate locations that this part is available from")]
-        public IList<ILocation> Locations
-        {
-            get { return locations; }
-        }
+		[DescriptionAttribute("Description of Shipping Cost. (Optional)")]
+		public string ShippingDescription
+		{
+			get => selectedLocation.ShippingDescription;
+			set => selectedLocation.ShippingDescription = value;
+		}
 
-		[DescriptionAttribute("A list of alternate parts which may be substituted for this Price Check part")]
-		public IList<IPriceCheckAlternatePart> AlternateParts { get; set; }
-
-		public ILocation NewLocation()
-        {
-            return new Location();
-        }
-
-        public void AddLocation(ILocation location)
-        {
-            locations.Add(location);
-        }
-
-        public IPriceCheckAlternatePart NewAlternatePart()
-        {
-            return new PriceCheckAlternatePart();
-        }
-
-		public void AddAlternatePart(IPriceCheckAlternatePart partItem)
-        {
-            AlternateParts.Add(partItem);
-        }
-
-		#endregion
+		[DescriptionAttribute("Shipping cost for this part. (Optional - defaults to 0)")]
+		public decimal ShippingCost
+		{
+			get => selectedLocation.ShippingCost;
+			set => selectedLocation.ShippingCost = value;
+		}
 
 		[DescriptionAttribute("The total number of quantity available")]
 		public decimal QuantityAvailable
@@ -165,47 +195,15 @@ namespace Mitchell1.Catalog.Driver.Helpers
 			}
 		}
 
-		[DescriptionAttribute("The location selected from the list of available locations")]
-		public ILocation SelectedLocation
-		{
-			get
-			{
-				if (selectedLocation == null || selectedLocation == EmptyLocation)
-				{
-					if (Locations.Count > 0)
-					{
-						selectedLocation = Locations[0];
-					}
-					else
-					{
-						if (selectedLocation == null)
-						{
-							selectedLocation = EmptyLocation;
-						}
-					}
-				}
-				return selectedLocation;
-			}
-			set { selectedLocation = value; }
-		}
-
 		public int GridIndex { get; set; }
 
-		public bool HasAlternateParts
-		{
-			get { return AlternateParts.Count != 0; }
-		}
+		public bool HasAlternateParts => AlternateParts.Count != 0;
 
-		public bool HasAlternateLocations
-		{
-			get { return Locations.Count > 1; }
-		}
+		public bool HasAlternateLocations => Locations.Count > 1;
 	}
 
-    public class OrderPart : ICartOrderedPart
+    internal class OrderPart : ICartOrderedPart, IExtendedOrderPart
 	{
-		#region Constructors
-
 		public OrderPart()
 		{
 			PartNumber = string.Empty;
@@ -214,7 +212,6 @@ namespace Mitchell1.Catalog.Driver.Helpers
 			Description = string.Empty;
 			QuantityRequested = decimal.Zero;
 			QuantityOrdered = decimal.Zero;
-			GridIndex = 0;
 			Status = string.Empty;
 			LocationName = string.Empty;
 			LocationId = string.Empty;
@@ -226,10 +223,6 @@ namespace Mitchell1.Catalog.Driver.Helpers
 		    PartCategory = PartCategory.Unspecified;
 		    Size = "";
 		}
-
-		#endregion
-
-		#region IOrderPart Members
 
 		[DescriptionAttribute("The status for the order part")]
 		public string Status { get; set; }
@@ -274,16 +267,25 @@ namespace Mitchell1.Catalog.Driver.Helpers
 		[DescriptionAttribute("The total number of units available from the catalog (parts vendor)")]
 		public decimal QuantityAvailable { get; set; }
 
-		[Browsable(false)]
-		public int GridIndex { get; set; }
-
 	    [DescriptionAttribute("Indicates whether the part was found in the catalog (valid) or not (invalid)")]
 		public bool Found { get; set; }
 
+        [DescriptionAttribute("Uniquely identifies (within this catalog) the source supplier for this part.")]
+        public string SupplierName { get; set; }
+
+        [DescriptionAttribute("The metadata contains JSON supplier information.")]
+        public string Metadata { get; set; }
+
+        [DescriptionAttribute("Set if part is a tire, wheel, other...")]
         public PartCategory PartCategory { get; set; }
 
+        [DescriptionAttribute("The size of the part.  This field is limited to 20 characters (maximum length).")]
         public string Size { get; set; }
 
-	    #endregion
-    }
+        [DescriptionAttribute("Description of Shipping Cost. (Optional)")]
+	    public string ShippingDescription { get; set; }
+
+	    [DescriptionAttribute("Shipping cost for this part. (Optional - defaults to 0)")]
+	    public decimal ShippingCost { get; set; }
+	}
 }

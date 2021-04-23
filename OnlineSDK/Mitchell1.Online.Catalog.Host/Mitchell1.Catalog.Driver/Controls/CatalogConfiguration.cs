@@ -23,7 +23,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 
 			InitializeComponent();
 
-            comboBox1.SelectedIndex = 0;
+            comboBoxApiLevel.SelectedIndex = 0;
 	        dataGridViewURLs.AutoGenerateColumns = false;
 	        linkLabelConfig.TabStop = false;
         }
@@ -75,9 +75,9 @@ namespace Mitchell1.Catalog.Driver.Controls
 			    [CatalogApiPart.Setup] = "View/vendorsetup",
 			    [CatalogApiPart.GoShopping] = "View/goshopping",
 			    [CatalogApiPart.PriceCheck] = "Api/PriceCheck",
-			    [CatalogApiPart.PartsOrder] = "Api/OrderParts",
-			    [CatalogApiPart.OrderTracking] = "Api/OrderTracking"
-		    };
+                [CatalogApiPart.PartsOrder] = "Api/OrderParts",
+                [CatalogApiPart.OrderTracking] = "Api/OrderTracking"
+            };
 	    }
 
         private OnlineCatalogInformation GetOnlineCatalogInformationFromUi()
@@ -87,7 +87,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 		        Identifier = textBoxIdentifier.Text,
 		        DisplayName = textBoxName.Text,
 		        Description = textBoxDescription.Text,
-		        ApiVersionLevel = int.Parse(comboBox1.Text),
+		        ApiVersionLevel = int.Parse(comboBoxApiLevel.Text),
 		        ApiBaseUrl = textBoxApiUrl.Text
 	        };
 
@@ -97,9 +97,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 		        onlineCatalogInformation[url.CatalogApiPart] = url.Value ?? "";
 	        }
 
-            if (checkBoxDeliver.Checked)
-                onlineCatalogInformation.DeliveryMethod = new DefaultDeliveryMethod();
-
+            onlineCatalogInformation.ShowsDeliverWillCall = checkBoxDeliver.Checked;
             onlineCatalogInformation.AllowsBlankManufacturerCode = checkBoxAllowsBlankManufacturerCode.Checked;
             onlineCatalogInformation.AllowsNotFoundPartsToBeOrdered = checkBoxAllowsNotFoundPartsToBeOrdered.Checked;
             onlineCatalogInformation.RequiresPriceCheck = checkBoxRequiresPriceCheck.Checked;
@@ -120,12 +118,12 @@ namespace Mitchell1.Catalog.Driver.Controls
             textBoxIdentifier.Text = onlineCatalogInformation.Identifier;
             textBoxName.Text = onlineCatalogInformation.DisplayName;
             textBoxDescription.Text = onlineCatalogInformation.Description;
-            comboBox1.Text = "1"; // onlineCatalogInformation.ApiVersionLevel = int.Parse(c);
+            comboBoxApiLevel.Text = "1"; // onlineCatalogInformation.ApiVersionLevel = int.Parse(c);
             textBoxApiUrl.Text = onlineCatalogInformation.ApiBaseUrl;
 
 	        dataGridViewURLs.DataSource = CatalogUrlComponent.GetUrlComponentList(onlineCatalogInformation);
 
-            checkBoxDeliver.Checked = onlineCatalogInformation.DeliveryMethod != null;
+            checkBoxDeliver.Checked = onlineCatalogInformation.ShowsDeliverWillCall;
             checkBoxAllowsBlankManufacturerCode.Checked = onlineCatalogInformation.AllowsBlankManufacturerCode;
             checkBoxAllowsNotFoundPartsToBeOrdered.Checked = onlineCatalogInformation.AllowsNotFoundPartsToBeOrdered;
             checkBoxRequiresPriceCheck.Checked = onlineCatalogInformation.RequiresPriceCheck;

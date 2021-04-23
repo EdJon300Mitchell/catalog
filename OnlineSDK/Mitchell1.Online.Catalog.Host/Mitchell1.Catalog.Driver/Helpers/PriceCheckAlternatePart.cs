@@ -1,12 +1,13 @@
 using System.Collections.Generic;
-using Mitchell1.Catalog.Framework.Interfaces;
 using System.ComponentModel;
+using Mitchell1.Catalog.Framework.Interfaces;
+using Mitchell1.Online.Catalog.Host;
 
 namespace Mitchell1.Catalog.Driver.Helpers
 {
-	internal class PriceCheckAlternatePart : IPriceCheckAlternatePart
+	internal class PriceCheckAlternatePart : IExtendedPriceCheckAlternatePart
 	{
-		#region IPriceCheckAlternatePart Members
+		private readonly LocationList locations = new LocationList();
 
 		[DescriptionAttribute("The individual status for this Alternate Part when doing the Price Check")]
 		public string Status { get; set; }
@@ -25,48 +26,15 @@ namespace Mitchell1.Catalog.Driver.Helpers
 		[DescriptionAttribute("A description for this Alternate Part (like: \"Front Caliper Bolt\")")]
 		public string Description { get; set; }
 
-		public void AddLocation(ILocation location)
-		{
-			locations.Add(location);
-		}
+		public void AddLocation(ILocation location) => locations.Add(location);
 
-		public IList<ILocation> Locations
-		{
-			get { return locations; }
-		}
+		public IList<Location> Locations => locations;
 
-		public ILocation NewLocation()
-		{
-			return new Location();
-		}
+		IList<ILocation> IPriceCheckAlternatePart.Locations => locations;
 
-		#endregion
+		public ILocation NewLocation() => new Location();
 
-		public ILocation SelectedLocation
-		{
-			get
-			{
-				if (selectedLocation == null || selectedLocation == EmptyLocation)
-				{
-					if (Locations.Count > 0)
-					{
-						selectedLocation = Locations[0];
-					}
-					else
-					{
-						if (selectedLocation == null)
-						{
-							selectedLocation = EmptyLocation;
-						}
-					}
-				}
-				return selectedLocation;
-			}
-			set { selectedLocation = value; }
-		}
-
-		private readonly IList<ILocation> locations = new List<ILocation>();
-		private readonly ILocation EmptyLocation = new Location();
-		private ILocation selectedLocation;
+		[DescriptionAttribute("The metadata contains JSON supplier information.")]
+		public string Metadata { get; set; }
 	}
 }
