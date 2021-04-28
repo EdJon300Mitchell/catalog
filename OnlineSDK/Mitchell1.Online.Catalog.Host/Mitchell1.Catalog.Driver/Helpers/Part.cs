@@ -7,7 +7,7 @@ using PartCategory = Mitchell1.Catalog.Framework.Interfaces.PartCategory;
 
 namespace Mitchell1.Catalog.Driver.Helpers
 {
-	internal class PriceCheckPart : IExtendedPriceCheckPart
+	public class PriceCheckPart : IExtendedPriceCheckPart
 	{
 		private readonly LocationList locations = new LocationList();
 		private Location selectedLocation;
@@ -202,7 +202,7 @@ namespace Mitchell1.Catalog.Driver.Helpers
 		public bool HasAlternateLocations => Locations.Count > 1;
 	}
 
-    internal class OrderPart : ICartOrderedPart, IExtendedOrderPart
+    public class OrderPart : ICartOrderedPart, IExtendedOrderPart
 	{
 		public OrderPart()
 		{

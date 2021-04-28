@@ -57,7 +57,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\Mitchell1.Online.Catalog.Host\OnlineCatalogKey.snk</AssemblyOriginatorKeyFile>
@@ -197,9 +197,6 @@
     <Content Include="Resources\Mitchell1.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Mitchell1.Online.Catalog.Host\OnlineCatalogKey.snk">
-      <Link>OnlineCatalogKey.snk</Link>
-    </None>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>

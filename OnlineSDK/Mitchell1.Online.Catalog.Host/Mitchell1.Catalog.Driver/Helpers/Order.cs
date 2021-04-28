@@ -3,7 +3,7 @@ using Mitchell1.Online.Catalog.Host;
 
 namespace Mitchell1.Catalog.Driver.Helpers
 {
-	internal class Order : IExtendedOrder
+	public class Order : IExtendedOrder
 	{
 		public string ConfirmationNumber { get; set; }
 		public string DeliveryOption { get; set; }

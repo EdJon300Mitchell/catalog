@@ -4,7 +4,7 @@ using Mitchell1.Online.Catalog.Host;
 
 namespace Mitchell1.Catalog.Driver.Helpers
 {
-	internal class PriceCheck : IExtendedPriceCheck
+	public class PriceCheck : IExtendedPriceCheck
 	{
 		public PriceCheck()
 		{

@@ -109,7 +109,7 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
             }
         }
 
-        internal static ShoppingCart HandleShoppingCart(dynamic shoppingCart)
+        public static ShoppingCart HandleShoppingCart(dynamic shoppingCart)
         {
 	        if (shoppingCart is string json)
 		        return JsonConvert.DeserializeObject<ShoppingCart>(json, new CartItemConverter());

@@ -66,7 +66,7 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
 		    return UpdatePriceCheck(response, priceCheck);
 	    }
 
-		internal static bool UpdatePriceCheck(string responseRaw, IExtendedPriceCheck priceCheck)
+		public static bool UpdatePriceCheck(string responseRaw, IExtendedPriceCheck priceCheck)
 		{
 			if (responseRaw == null) return false;
 
@@ -190,7 +190,7 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
 			return UpdateOrder(response, order);
 		}
         
-        internal static bool UpdateOrder(string responseRaw, IExtendedOrder order)
+        public static bool UpdateOrder(string responseRaw, IExtendedOrder order)
         {
 	        if (responseRaw == null) return false;
 
