@@ -10,6 +10,7 @@ namespace Mitchell1.Catalog.Driver.Helpers
 		public string OrderMessage { get; set; }
 		public string TrackingNumber { get; set; }
 		public string PurchaseOrderNumber { get; set; }
+		public string ReferenceInvoiceNumber { get; set; }
 		public IList<OrderPart> Parts { get; } = new List<OrderPart>();
 
 		IReadOnlyList<IExtendedOrderPart> IExtendedOrder.Parts => (IReadOnlyList<IExtendedOrderPart>)Parts;

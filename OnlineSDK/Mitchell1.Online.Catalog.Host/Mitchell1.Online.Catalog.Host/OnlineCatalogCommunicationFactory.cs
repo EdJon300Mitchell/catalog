@@ -47,7 +47,7 @@ namespace Mitchell1.Online.Catalog.Host
 			return new CatalogRestApiV1(catalogInformation, logger, newHostingForm);
         }
 
-        internal static bool IsSupportedApiLevel(int apiVersionLevel) => apiVersionLevel >= 1 && apiVersionLevel <= 3;
+        internal static bool IsSupportedApiLevel(int apiVersionLevel) => apiVersionLevel >= 1 && apiVersionLevel <= OnlineCatalogInformation.HostApiLevel;
 
         private static void CheckApiLevel(OnlineCatalogInformation catalogInformation)
         {

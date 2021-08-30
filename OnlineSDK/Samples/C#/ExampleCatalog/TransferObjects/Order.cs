@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Mitchell1.Online.Catalog.Host.TransferObjects
 {
@@ -12,6 +13,7 @@ namespace Mitchell1.Online.Catalog.Host.TransferObjects
     }
 
     // See Mitchell1 Online Catalog SDK Doc
+	[Serializable]
     public class OrderResponse
     {
         public string AbsoluteRedirectUrl { get; set; }
@@ -21,17 +23,38 @@ namespace Mitchell1.Online.Catalog.Host.TransferObjects
     }
 
     // See Mitchell1 Online Catalog SDK Doc
+    // This class represents an order request input
     public class Order
     {
         public string DeliveryOption { get; set; }
 		public string OrderMessage { get; set; }
         public string PurchaseOrderNumber { get; set; }
-	    public IList<OrderPart> Parts { get; set; }
-	}
+		public string ReferenceInvoiceNumber { get; set; }
+        public IList<OrderPart> Parts { get; set; }
+
+    }
+
+    // See Mitchell1 Online Catalog SDK Doc
+	[Serializable]
+    public class OrderPartsResponse
+    {
+        public string AbsoluteRedirectUrl { get; set; }
+        public IList<PurchaseOrder> PurchaseOrders { get; set; }
+    }
+
+    // See Mitchell1 Online Catalog SDK Doc
+	[Serializable]
+    public class PurchaseOrder
+    {
+        public string ConfirmationNumber { get; set; }
+        public string TrackingNumber { get; set; }
+        public IList<OrderPart> Parts { get; set; }
+    }
 
     // See Mitchell1 Online Catalog SDK Doc
     public class OrderPart
     {
+		public int Index { get; set; }
         public bool Found { get; set; }
         public string LocationId { get; set; }
         public string LocationName { get; set; }

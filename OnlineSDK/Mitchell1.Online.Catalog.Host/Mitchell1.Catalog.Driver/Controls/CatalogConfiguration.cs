@@ -76,8 +76,9 @@ namespace Mitchell1.Catalog.Driver.Controls
 			    [CatalogApiPart.GoShopping] = "View/goshopping",
 			    [CatalogApiPart.PriceCheck] = "Api/PriceCheck",
                 [CatalogApiPart.PartsOrder] = "Api/OrderParts",
-                [CatalogApiPart.OrderTracking] = "Api/OrderTracking"
-            };
+                [CatalogApiPart.OrderTracking] = "Api/OrderTracking",
+                [CatalogApiPart.PartsOrderV2] = "Api/v2/OrderParts"
+			};
 	    }
 
         private OnlineCatalogInformation GetOnlineCatalogInformationFromUi()
@@ -106,6 +107,7 @@ namespace Mitchell1.Catalog.Driver.Controls
             onlineCatalogInformation.SupportsLocation = checkBoxSupportsLocation.Checked;
             onlineCatalogInformation.SupportsOrderMessage = checkBoxSupportsOrderMessage.Checked;
             onlineCatalogInformation.SupportsPriceCheck = checkBoxSupportsPriceCheck.Checked;
+            onlineCatalogInformation.SupportsMultiplePurchaseOrders = checkBoxMultiplePOs.Checked;
 
             onlineCatalogInformation.SupportUrl = textBoxSite.Text;
             onlineCatalogInformation.SupportPhone = textBoxSupportPhone.Text;
@@ -132,6 +134,7 @@ namespace Mitchell1.Catalog.Driver.Controls
             checkBoxSupportsLocation.Checked = onlineCatalogInformation.SupportsLocation;
             checkBoxSupportsOrderMessage.Checked = onlineCatalogInformation.SupportsOrderMessage;
             checkBoxSupportsPriceCheck.Checked = onlineCatalogInformation.SupportsPriceCheck;
+            checkBoxMultiplePOs.Checked = onlineCatalogInformation.SupportsMultiplePurchaseOrders;
 
             textBoxSite.Text = onlineCatalogInformation.SupportUrl; 
             textBoxSupportPhone.Text = onlineCatalogInformation.SupportPhone;
@@ -172,8 +175,7 @@ namespace Mitchell1.Catalog.Driver.Controls
 		    try
 		    {
 			    var onlineCatalogInformation = GetOnlineCatalogInformationFromUi();
-			    var catalogInfo = new CatalogInfo();
-			    await catalogInfo.LoadOnlineCatalogInformation(onlineCatalogInformation, CancellationToken.None);
+			    var catalogInfo = await CatalogInfo.NewCatalogInfoAsync(onlineCatalogInformation);
 
 			    catalogDriver.ConfiguredCatalog = catalogInfo;
 		    }
@@ -261,9 +263,9 @@ namespace Mitchell1.Catalog.Driver.Controls
 				MessageBox.Show(exception.Message);
 			}
 		}
-	}
+    }
 
-	public interface ICatalogDriver
+    public interface ICatalogDriver
 	{
 		CatalogInfo ConfiguredCatalog { get; set; }
 		ShoppingCart ShoppingCart { get; set; }

@@ -56,7 +56,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <ItemGroup>
+	<ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mitchell1.Browser.Interfaces">
       <HintPath>..\..\..\bin\Browser\Mitchell1.Browser.Interfaces.dll</HintPath>
@@ -134,6 +134,12 @@
       <DependentUpon>VendorSetupCtrl.cs</DependentUpon>
     </Compile>
     <Compile Include="Data\DriverData.cs" />
+    <Compile Include="Forms\MultiplePurchaseOrderTrackingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MultiplePurchaseOrderTrackingForm.Designer.cs">
+      <DependentUpon>MultiplePurchaseOrderTrackingForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Helpers\ExternalCatalogAdapterErrorHandler.cs" />
     <Compile Include="Helpers\HostData.cs" />
     <Compile Include="Helpers\Order.cs" />
@@ -142,6 +148,8 @@
     <Compile Include="Helpers\PriceCheckAlternatePart.cs" />
     <Compile Include="Helpers\Vehicle.cs" />
     <Compile Include="Helpers\Vendor.cs" />
+    <Compile Include="Models\PurchaseOrderGridRow.cs" />
+    <Compile Include="Models\ValidationResponse.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Browser\BrowserHtmlTests.resx">
@@ -173,6 +181,9 @@
       <SubType>Designer</SubType>
       <DependentUpon>VendorSetupCtrl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\MultiplePurchaseOrderTrackingForm.resx">
+      <DependentUpon>MultiplePurchaseOrderTrackingForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -191,7 +202,7 @@
     <Content Include="Resources\Mitchell1.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
+	  <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

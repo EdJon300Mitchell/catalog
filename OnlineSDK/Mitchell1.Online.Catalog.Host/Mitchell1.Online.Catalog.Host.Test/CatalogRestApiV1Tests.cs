@@ -46,35 +46,6 @@ namespace Mitchell1.Online.Catalog.Host.Test
 		}
 
 		[TestMethod]
-		public void UpdateOrder_null_response_returns_false_Test()
-		{
-			var success = CatalogRestApiV1.UpdateOrder(null, order);
-
-			Assert.IsFalse(success);
-		}
-
-		[TestMethod]
-		[DataRow("", "0")]
-		[DataRow(@",""ShippingCost"":7", "7")]
-		[DataRow(@",""ShippingCost"":3.49", "3.49")]
-		[DataRow(@",""ShippingCost"":0", "0")]
-		[DataRow(@",""ShippingCost"":""3.45""", "3.45")]
-		public void UpdateOrder_ShippingCost_Test(string shippingCost, string value)
-		{
-			order.Parts.Add(new OrderPart {PartNumber = "0"});
-			var response = $@"{{
-				""ConfirmationNumber"":""1234"",
-				""Parts"":[
-					{{""Found"":false,""PartNumber"":""0""{shippingCost}}}
-				]}}";
-			var success = CatalogRestApiV1.UpdateOrder(response, order);
-
-			Assert.IsTrue(success);
-
-			Assert.AreEqual(decimal.Parse(value), order.Parts[0].ShippingCost, "order.Parts[0].ShippingCost");
-		}
-
-		[TestMethod]
 		public void Test()
 		{
 			order.Parts.Add(new OrderPart {Description = "Test1"});

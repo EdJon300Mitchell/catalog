@@ -18,19 +18,23 @@ namespace ExampleCatalog.Api
 	{
 		private const string modulePath = "/api";
 		private const string showUiPartNumber = "SHOWUI";
+		private const string locationNull = "LOCATIONNULL";
 		private const string showUiManufacturerName = "M1";
 		private const string priceCheckRelativeUrl = "/PriceCheckView";
 		private const string orderPartsRelativeUrl = "/OrderPartsView";
+		private const string splitPartOrderPartNumber = "SPARKPLUGS";
+		private const string splitPartOrderManufacturerName = "NGK";
 		private static readonly JsonSerializerSettings ignoreNullValues = new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore};
 
 		public PartsController(HttpServer server) : base(modulePath)
 		{
 			Post["/PriceCheck"] = HandlePriceCheck;
 			Post["/OrderParts"] = HandleOrderParts;
-
+			Post["/v2/OrderParts"] = HandleOrderPartsMultiplePurchaseOrders;
 			// This lives here for simplicity, could live anywhere
 			Get[priceCheckRelativeUrl + "/{sessionId}"] = o => HandlePriceCheckViewRequest(o.sessionId);
 			Get[orderPartsRelativeUrl + "/{sessionId}"] = o => HandleOrderPartsViewRequest(o.sessionId);
+			Get[orderPartsRelativeUrl + "/v2/{sessionId}"] = o => HandleOrderPartsViewRequestMultiplePurchaseOrder(o.sessionId);
 		}
 
 		public class AuthObject
@@ -166,13 +170,22 @@ namespace ExampleCatalog.Api
 				else
 				{
 					part.Found = true;
-					foreach (var location in foundPart.Locations)
+					if (foundPart.PartNumber == locationNull)
 					{
+						var location = new Location {QuantityAvailable = 3, UnitCost = 2.3M};
 						part.Locations.Add(location);
+						part.SelectedLocation = location;
 					}
+					else
+					{
+						foreach (var location in foundPart.Locations)
+						{
+							part.Locations.Add(location);
+						}
 
-					var matchedLocation = part.Locations.FirstOrDefault(x => x.Id == selectedLocation.Id);
-					part.SelectedLocation = matchedLocation ?? part.Locations[0];
+						var matchedLocation = part.Locations.FirstOrDefault(x => x.Id == selectedLocation.Id);
+						part.SelectedLocation = matchedLocation ?? part.Locations[0];
+					}
 
 					// optionally define metadata for the part (custom data)
 					part.Metadata = foundPart.Metadata;
@@ -237,6 +250,36 @@ namespace ExampleCatalog.Api
 			}
 		}
 
+		private dynamic HandleOrderPartsMultiplePurchaseOrders(dynamic o)
+		{
+			Console.WriteLine("OrderParts With Multiple POs Requested");
+			try
+			{
+				var order = this.Bind<OrderRequest>();
+				if (!CheckVendor(order.Vendor, out var auth))
+					return 403;
+
+				var errorResponse = CheckForSimulatedOrderPartsError(order);
+				if (errorResponse != null)
+					return errorResponse;
+
+				if (IsAbsoluteRedirectUrlSupported(order.HostData) && order.Order.Parts.Any(part => part.PartNumber == showUiPartNumber && part.ManufacturerName == showUiManufacturerName))
+				{
+					var sessionId = ObjectStore.CreateOrderPartsSession(order);
+					return new { AbsoluteRedirectUrl = GenerateLink(sessionId, $"{orderPartsRelativeUrl}/v2") };
+				}
+
+				var orderResponse = TransformSampleOrders(order, auth);
+
+				return Response.AsJson(orderResponse);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine("HandleOrderParts: {0}", e.Message);
+				return ServerError(e.Message, HttpStatusCode.InternalServerError);
+			}
+		}
+
 		private static OrderResponse TransformSampleOrder(OrderRequest order, AuthObject auth)
 		{
 			string vehicleJson = order.Vehicle != null ? JsonConvert.SerializeObject(order.Vehicle) : null;
@@ -244,15 +287,48 @@ namespace ExampleCatalog.Api
 
 			var orderId = ObjectStore.CreateOrder(order.Order.PurchaseOrderNumber, auth.Shop, vehicleJson);
 			var trackingId = ObjectStore.CreateTracking(orderId);
+			var orderResponse = ProduceSamplePurchaseOrder(orderId, trackingId, order);
 
-			var orderResponse = new OrderResponse
+			return JsonConvert.DeserializeObject<OrderResponse>(JsonConvert.SerializeObject(orderResponse));
+		}
+
+		private static PurchaseOrder ProduceSamplePurchaseOrder(in long orderId, in long trackingId, OrderRequest order)
+        {
+			var orderResponse = new PurchaseOrder
 			{
 				ConfirmationNumber = $"Confirmation #{orderId} {order.Order.DeliveryOption ?? ""}",
 				TrackingNumber = trackingId.ToString(CultureInfo.InvariantCulture),
 				Parts = order.Order.Parts
 			};
+			SetParts(orderResponse.Parts);
 
-			foreach (var part in orderResponse.Parts)
+			return orderResponse;
+		}
+
+		/// <summary>
+		/// For use when catalog supports multiple purchase orders returned
+		/// </summary>
+		/// <param name="orderId"></param>
+		/// <param name="trackingId"></param>
+		/// <param name="order"></param>
+		/// <param name="parts"></param>
+		/// <returns></returns>
+		private static PurchaseOrder ProduceSamplePurchaseOrder(in long orderId, in long trackingId, OrderRequest order, IList<OrderPart> parts)
+        {
+			var orderResponse = new PurchaseOrder
+			{
+				ConfirmationNumber = $"Confirmation #{orderId} {order.Order.DeliveryOption ?? ""}",
+				TrackingNumber = trackingId.ToString(CultureInfo.InvariantCulture),
+				Parts = parts
+			};
+			SetParts(orderResponse.Parts);
+
+			return orderResponse;
+		}
+
+		private static void SetParts(IList<OrderPart> parts)
+        {
+			foreach (var part in parts)
 			{
 				if (!inventory.TryGetValue(new PartDictionary.PartKey(part.PartNumber, part.ManufacturerLineCode), out var foundPart))
 				{
@@ -263,8 +339,8 @@ namespace ExampleCatalog.Api
 				{
 					part.Found = true;
 					var matchedLocation = foundPart.Locations.FirstOrDefault(x => x.Id == part.LocationId) ?? foundPart.Locations[0];
-					bool matchingCosts = part.UnitCost == matchedLocation.UnitCost && part.ShippingCost == matchedLocation.ShippingCost && part.ShippingDescription == matchedLocation.ShippingDescription;
-					part.QuantityOrdered = matchingCosts ? Math.Min(part.QuantityRequested, matchedLocation.QuantityAvailable) : 0;
+					bool matchedPartByProperties = part.ShippingDescription == matchedLocation.ShippingDescription;
+					part.QuantityOrdered = matchedPartByProperties ? Math.Min(part.QuantityRequested, matchedLocation.QuantityAvailable) : 0;
 					part.Status = (part.QuantityOrdered == part.QuantityRequested) ? "Ordered"
 						: (part.QuantityOrdered > 0) ? "Partially Ordered"
 						: "Not Ordered";
@@ -291,9 +367,102 @@ namespace ExampleCatalog.Api
 					}
 				}
 			}
-
-			return orderResponse;
 		}
+
+		private static OrderPartsResponse TransformSampleOrders(OrderRequest order, AuthObject auth)
+		{
+			string vehicleJson = order.Vehicle != null ? JsonConvert.SerializeObject(order.Vehicle) : null;
+
+			var orderId = ObjectStore.CreateOrder(order.Order.PurchaseOrderNumber, auth.Shop, vehicleJson);
+			var trackingId = ObjectStore.CreateTracking(orderId);
+
+			var orderPartsResponse = new OrderPartsResponse() {PurchaseOrders = new List<PurchaseOrder>()};
+
+			if (order.Order.Parts.Count == 1)
+            {
+				orderPartsResponse.PurchaseOrders.Add(ProduceSamplePurchaseOrder(orderId, trackingId, order)); 
+				return orderPartsResponse;
+			}
+
+			//simulating multiple orders returned from a catalog
+			var splitPartsLists = SplitPartListForMultiplePurchaseOrders(order.Order.Parts);
+            foreach (var partList in splitPartsLists)
+            {
+				orderPartsResponse.PurchaseOrders.Add(ProduceSamplePurchaseOrder(
+					ObjectStore.CreateOrder(order.Order.PurchaseOrderNumber, auth.Shop, vehicleJson),
+					ObjectStore.CreateTracking(orderId), 
+					order, 
+					partList));
+            }
+
+			return orderPartsResponse;
+		}
+
+
+		/// <summary>
+		/// Parts count less than 3, even split
+		/// </summary>
+		/// <param name="allParts"></param>
+		/// <returns></returns>
+		private static List<IList<OrderPart>> SplitPartListForMultiplePurchaseOrders(IList<OrderPart> allParts)
+        {
+			var list = new List<IList<OrderPart>>();
+			Func<OrderPart, bool> partToSplitPredicate = (part) =>
+			{
+				return 
+					part.PartNumber == splitPartOrderPartNumber
+					&& part.ManufacturerName == splitPartOrderManufacturerName;
+			};
+
+			if (allParts?.Count == 0)
+				return list;
+
+			var containsPartOrderToBeSplit = allParts.Any(partToSplitPredicate);
+			if (allParts.Count <= 3 && !containsPartOrderToBeSplit)
+            {
+                foreach (var part in allParts)
+                {
+					var newlist = new List<OrderPart>();
+					newlist.Add(part);
+					list.Add(newlist);
+				}
+            }
+			else if (!containsPartOrderToBeSplit)
+            {
+				list.Add(allParts.Skip(0).Take(1).ToList());
+				list.Add(allParts.Skip(1).Take(1).ToList());
+				list.Add(allParts.Skip(2).Take(1).ToList());
+				list.Add(allParts.Skip(3).ToList());
+			}
+            else
+            {
+				var clonedPartList = JsonConvert.DeserializeObject<List<OrderPart>>(JsonConvert.SerializeObject(allParts));
+				var partToSplit = clonedPartList.First(partToSplitPredicate);
+				clonedPartList.Remove(partToSplit);
+
+                for (int index = 0; index < clonedPartList.Count; index++)
+                {
+					if (index > 2)
+						break;
+					list.Add(clonedPartList.Skip(index).Take(1).ToList());
+				}
+				if (clonedPartList.Count >= 4)
+					list.Add(clonedPartList.Skip(3).ToList());
+
+				//split part
+				var clonedPart1 = JsonConvert.DeserializeObject<OrderPart>(JsonConvert.SerializeObject(partToSplit));
+				clonedPart1.QuantityOrdered = 2;
+				clonedPart1.QuantityRequested = 2;
+                clonedPart1.SupplierName = "Reed's Quality Auto";
+				var clonedPart2 = JsonConvert.DeserializeObject<OrderPart>(JsonConvert.SerializeObject(partToSplit));
+				clonedPart2.QuantityOrdered = 3;
+				clonedPart2.QuantityRequested = 3;
+                list.Add(new List<OrderPart> { clonedPart1 });
+				list.Add(new List<OrderPart> { clonedPart2 });
+			}
+
+			return list;
+        }
 
 		public static Response ServerError(string message, HttpStatusCode statusCode)
 		{
@@ -331,6 +500,57 @@ namespace ExampleCatalog.Api
 							<textarea id=""inputJson"" style=""width: 100%; height: 6em; padding:0.5em 0.5em"">{inputJson}</textarea>
 							<p>
 								The price check json, shown below, is fully editable and will be saved when the submit button is clicked.
+							</p>
+							<input type=""button"" onclick=""SubmitRequestClicked();"" value=""Submit"" />
+							<input type=""button"" style=""margin:5px;"" onclick=""CancelRequestClicked();"" value=""Cancel"" />
+							<textarea id=""outputJson"" style=""width: 100%; height: 75%; padding:0.5em 0.5em"">{outputJson}</textarea>
+							<br />
+							<script type=""text/javascript"">
+								var apiKey = 'apikey-12345-key';
+								var catalogSdk = new Catalog(apiKey, false);
+								function SubmitRequestClicked() {{
+									catalogSdk.transfer(document.getElementById('outputJson').value);
+								}}
+								function CancelRequestClicked() {{
+									catalogSdk.cancelRequest();
+								}}
+							</script>
+						</body>
+					</html>", HttpStatusCode.OK);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+				return ServerError(e.Message, HttpStatusCode.InternalServerError);
+			}
+		}
+
+		private static Response HandleOrderPartsViewRequestMultiplePurchaseOrder(long sessionId)
+		{
+			try
+			{
+				OrderRequest orderRequest = ObjectStore.GetOrderPartsSession(sessionId);
+				if (orderRequest == null)
+					return SessionIdNotFound(sessionId.ToString());
+
+				if (!CheckVendor(orderRequest.Vendor, out var auth))
+					CreateHtmlResponse("<html><body><b>Not Authorized</b></body></html>", HttpStatusCode.Forbidden);
+
+				var inputJson = JsonConvert.SerializeObject(orderRequest.Order, Formatting.Indented);
+				var orderResponse = TransformSampleOrders(orderRequest, auth);
+				var outputJson = JsonConvert.SerializeObject(orderResponse, Formatting.Indented, ignoreNullValues);
+
+				return CreateHtmlResponse($@"
+					<html>
+						<head>
+							<script type =""text/javascript"" src = ""/{HttpServer.Root}/Content/scripts/catalog-v3.0.0.js"" ></script>
+						</head>
+						<body>
+							<h2>Order:</h2>
+							Input: (SessionId#: {sessionId})<br />
+							<textarea id=""inputJson"" style=""width: 100%; height: 6em; padding:0.5em 0.5em"">{inputJson}</textarea>
+							<p>
+								The order parts json, shown below, is fully editable and will be saved when the submit button is clicked.
 							</p>
 							<input type=""button"" onclick=""SubmitRequestClicked();"" value=""Submit"" />
 							<input type=""button"" style=""margin:5px;"" onclick=""CancelRequestClicked();"" value=""Cancel"" />
@@ -421,15 +641,17 @@ namespace ExampleCatalog.Api
 
 		private static readonly PartDictionary inventory = new PartDictionary
 		{
-			{"P1", "CDE", "Car Destruction Enterprise", "PART 1", 2.0M, 1.0M, 0, 3},
-			{"P2", "BFG", "Big Friendly Giant Co.", "Old Tire", 5.0M, 2.50M, 0, 7, "175", PartCategory.Tire},
-			{"TIRE1", "BFG", "B. F. G.", "TIRE1", 55.88M, 29.99M, 10.00M, 15, "S1", PartCategory.Tire},
-			{"WHEEL1", "BFG", "BFG", "WHEEL1", 28M, 14.0M, 0, 6, "S2", PartCategory.Wheel},
+			{"P1", "CDE", "Car Destruction Enterprise", "PART 1", 2.0M, 1.0M, 0, 3, null, PartCategory.Unspecified, null, null, "", 0},
+			{"P2", "BFG", "Big Friendly Giant Co.", "Old Tire", 5.0M, 2.50M, 0, 7, "175", PartCategory.Tire, null, null, "", 0},
+			{"TIRE1", "BFG", "B. F. G.", "TIRE1", 55.88M, 29.99M, 10.00M, 15, "S1", PartCategory.Tire, null, null, "", 0},
+			{"WHEEL1", "BFG", "BFG", "WHEEL1", 28M, 14.0M, 0, 6, "S2", PartCategory.Wheel, null, null, "", 0},
 			{"P3", "BCD", "B. C. D.", "PART 3", 42.99M, 81.49M, 0, 11, "", PartCategory.Unspecified, "Supplier4", "Meta", "Next Day", 6M},
 			{"P4", "BFG", "BFG", "PART 4", 2.99M, 1.49M, 0, 5, "S3", PartCategory.Unspecified, "Supplier ABC",
 				"{\"Supplier\" : { \"SupplierName\" : \"Supplier ABC\", \"Coupon\" : \"NX123\" }}", "Delivered in 2 hours", 0.99M},
 			{"SHOWUI", "M1", "M1", "SHOWUI", 24.99M, 12.0M, 0, 2, "S3", PartCategory.Unspecified, "Supplier XYZ",
 				"Custom Metadata that is returned to the PriceCheck and/or OrderParts", "Next day", 1.99M},
+			{locationNull, "M1", "M1", "Null Location", 24.99M, 12.0M, 0, 2},
+			{"SPARKPLUGS", "NGK", "NGK", "Spark plugs", 15M, 5.99M, 10, 5, "standard", PartCategory.Unspecified, null, null, "Overnight", 5.99M},
 		};
 	}
 

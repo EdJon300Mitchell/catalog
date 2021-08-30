@@ -1,13 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using Mitchell1.Catalog.Driver.Forms;
 using Mitchell1.Catalog.Driver.Helpers;
+using Mitchell1.Catalog.Driver.Models;
 using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host;
+using Mitchell1.Online.Catalog.Host.TransferObjects;
+using HostData = Mitchell1.Catalog.Driver.Helpers.HostData;
+using Location = Mitchell1.Online.Catalog.Host.Location;
+using Order = Mitchell1.Catalog.Driver.Helpers.Order;
+using OrderPart = Mitchell1.Catalog.Driver.Helpers.OrderPart;
 using PartCategory = Mitchell1.Catalog.Framework.Interfaces.PartCategory;
 using PartItem = Mitchell1.Online.Catalog.Host.TransferObjects.PartItem;
+using PriceCheck = Mitchell1.Catalog.Driver.Helpers.PriceCheck;
+using PriceCheckAlternatePart = Mitchell1.Catalog.Driver.Helpers.PriceCheckAlternatePart;
+using PriceCheckPart = Mitchell1.Catalog.Driver.Helpers.PriceCheckPart;
 using ShoppingCart = Mitchell1.Online.Catalog.Host.TransferObjects.ShoppingCart;
+using Vehicle = Mitchell1.Catalog.Driver.Helpers.Vehicle;
+using Vendor = Mitchell1.Catalog.Driver.Helpers.Vendor;
 
 namespace Mitchell1.Catalog.Driver.Controls
 {
@@ -23,7 +37,14 @@ namespace Mitchell1.Catalog.Driver.Controls
 		private readonly Vendor vendor;
 		private readonly Vehicle vehicle;
 		private readonly HostData hostData;
-		private bool ordered;
+		private OrderPartsResponse orderPartsResponse;
+
+		private const string OrdersTreeNodeName = "Orders";
+		private const string CannotTrackOrderMessageBoxTitle = "Cannot Track Order(s)";
+		private const string UnableToGetTrackingDataMessageBoxTitle = "Unable to Get Tracking Status";
+		private const string AbleToGetTrackingDataMessageBoxTitle = "Tracking Status Data Retrieved";
+		private const int MaximumNumberOfOrderTrackingConcurrentRequests = 10;
+
 
 		internal PriceCheckCtrl(IOnlineCatalogInfo catalogInfo, ShoppingCart cartItems, PriceCheck priceCheck, Order order, 
 			Vendor vendor, Vehicle vehicle, HostData hostData)
@@ -34,6 +55,7 @@ namespace Mitchell1.Catalog.Driver.Controls
             this.vendor = vendor;
             this.vehicle = vehicle;
             this.hostData = hostData;
+
             InitializeComponent();
 
             textBoxPONumber.Text = $"#{startingPO}";
@@ -164,33 +186,60 @@ namespace Mitchell1.Catalog.Driver.Controls
             };
     	}
 
-    	private void AddOrderToTree()
-	    {
-		    buttonOrderTracking.Text = $"Track Order #{order.TrackingNumber ?? "--"}";
+        private void AddOrdersToTree(OrderPartsResponse response)
+        {
+			buttonOrderTracking.Text = "Track Order(s)";
+            var ordersTreeNode = BuildOrdersTreeNode(response); 
+			foreach (var individualOrder in response.PurchaseOrders)
+            {
+                ordersTreeNode.Nodes.Add(BuildSingleOrderTreeNode(individualOrder)); 
+            }
+			InsertOrdersTreeNode(ordersTreeNode);
+		}
 
-			TreeNode orderNode = new TreeNode("Order : " + order.ConfirmationNumber)
-         	{
-         		Name = "Order",
-         		Tag = order,
-         		SelectedImageIndex = 2,
-         		ImageIndex = 2
-         	};
-			foreach (IExtendedOrderPart orderPart in order.Parts)
+		private TreeNode BuildOrdersTreeNode(OrderPartsResponse response)
+        {
+			var nodeLabel = $"Orders for Original PO: {order.PurchaseOrderNumber}, Parts Count: {order.Parts?.Count ?? 0}";
+			return new TreeNode(nodeLabel)
+			{
+				Name = OrdersTreeNodeName,
+				Tag = response,
+				SelectedImageIndex = 2,
+				ImageIndex = 2
+			};
+		}
+
+		private TreeNode BuildSingleOrderTreeNode(PurchaseOrder order)
+        {
+			var orderNode = new TreeNode("Order : " + order.ConfirmationNumber)
+			{
+				Name = "Order",
+				Tag = order,
+				SelectedImageIndex = 2,
+				ImageIndex = 2
+			};
+			foreach (var orderPart in order.Parts)
 			{
 				TreeNode orderPartNode = new TreeNode(orderPart.PartNumber + ":" + orderPart.Description)
-             	{
-             		Tag = orderPart,
-             		SelectedImageIndex = 9,
-             		ImageIndex = 9
-             	};
+				{
+					Tag = orderPart,
+					SelectedImageIndex = 9,
+					ImageIndex = 9
+				};
 				orderNode.Nodes.Add(orderPartNode);
 			}
-			if(treeViewAppSettings.Nodes["Order"] != null)
+
+			return orderNode;
+		}
+
+		private void InsertOrdersTreeNode(TreeNode ordersTreeNode)
+        {
+			if (treeViewAppSettings.Nodes[OrdersTreeNodeName] != null)
 			{
-				treeViewAppSettings.Nodes["Order"].Remove();
+				treeViewAppSettings.Nodes[OrdersTreeNodeName].Remove();
 			}
-			treeViewAppSettings.Nodes.Insert(0, orderNode);
-			treeViewAppSettings.Nodes["Order"].ExpandAll();
+			treeViewAppSettings.Nodes.Insert(0, ordersTreeNode);
+			treeViewAppSettings.Nodes[OrdersTreeNodeName].Expand();
 		}
 
 		private void AddPartItemToOrder(PartItem partItem)
@@ -624,10 +673,12 @@ namespace Mitchell1.Catalog.Driver.Controls
 
     	private void buttonOrderParts_Click(object sender, EventArgs e)
         {
-	        if (string.IsNullOrWhiteSpace(textBoxPONumber.Text))
-		        textBoxPONumber.Text = $"#{startingPO}";
+			// User will need to enter into starting Po number into textbox for single orders
+			if (string.IsNullOrWhiteSpace(textBoxPONumber.Text))
+				textBoxPONumber.Text = String.Empty;
 
-			buttonOrderTracking.Text = "Track Order...";
+			buttonOrderTracking.Text = "Ordering Parts...";
+			buttonOrderTracking.Enabled = false;
 			order.Parts.Clear();
 			order.PurchaseOrderNumber = textBoxPONumber.Text;
 
@@ -682,9 +733,8 @@ namespace Mitchell1.Catalog.Driver.Controls
 
 			try
 			{
-				ordered = catalog.OrderParts(order);
-				if (ordered)
-					AddOrderToTree();
+				orderPartsResponse = catalog.OrderParts(order);
+				AddOrdersToTree(orderPartsResponse);
 			}
 			catch (OperationCanceledException)
 			{
@@ -704,6 +754,10 @@ namespace Mitchell1.Catalog.Driver.Controls
 			catch (Exception ex)
 			{
 				catalogExceptionHandler.ShowGeneralCatalogExceptionMessage(ex.Message);
+			}
+			finally
+            {
+				buttonOrderTracking.Enabled = true;
 			}
 			// below forces the property grid to refresh (when Order node is selected)
 			propertyGridCartItems.SelectedObjects = propertyGridCartItems.SelectedObjects;
@@ -732,45 +786,117 @@ namespace Mitchell1.Catalog.Driver.Controls
 
 		private void buttonOrderTracking_Click(object sender, EventArgs e)
 		{
-			if (!ordered)
+			if (orderPartsResponse == null 
+				|| orderPartsResponse.PurchaseOrders == null
+				|| !orderPartsResponse.PurchaseOrders.Any())
 			{
-				MessageBox.Show("No Order Processed", "Error");
+				MessageBox.Show("There is no order to track.", CannotTrackOrderMessageBoxTitle);
 				return;
 			}
 
-			if (string.IsNullOrWhiteSpace(order.TrackingNumber))
-			{
-				MessageBox.Show("Order Has No Tracking #", "Error");
+			//Single PO
+			if (orderPartsResponse.PurchaseOrders?.Count == 1)
+            {
+				var theOrder = orderPartsResponse.PurchaseOrders.First();
+				var canRequestTracking = CanPurchaseOrderRequestTracking(theOrder);
+				if (!canRequestTracking.IsTrue)
+				{
+					MessageBox.Show(canRequestTracking.ErrorMessage, CannotTrackOrderMessageBoxTitle);
+					return;
+				}
+
+				try
+				{
+					var details = catalog.RequestOrderTracking(theOrder.TrackingNumber);
+					var wasAbleToRequestOrderTracking = IsRequestOrderTrackingResponseOK(details);
+					if (!wasAbleToRequestOrderTracking.IsTrue)
+					{
+						MessageBox.Show(wasAbleToRequestOrderTracking.ErrorMessage, UnableToGetTrackingDataMessageBoxTitle);
+						return;
+					}
+
+					var messageBoxText = $"Status: {details.StatusDisplay}\r\nURL: {details.ExternalTrackingUrl}\r\n\r\nOpen URL?";
+					if (MessageBox.Show(messageBoxText, AbleToGetTrackingDataMessageBoxTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
+					{
+						Process.Start(details.ExternalTrackingUrl.ToString());
+						MessageBox.Show($"Tracking data url should have opened automatically\r\n\r\n{details.ExternalTrackingUrl}", AbleToGetTrackingDataMessageBoxTitle);
+					}
+				}
+				catch (OperationCanceledException)
+				{
+				}
+				catch (Exception exception)
+				{
+					MessageBox.Show(exception.Message);
+				}
 				return;
 			}
 
-			try
-			{
-				var details = catalog.RequestOrderTracking(order.TrackingNumber);
-				if (details == null)
+			//multiple POs
+			var gridRows = new List<PurchaseOrderGridRow>();
+            foreach (var purchaseOrder in orderPartsResponse.PurchaseOrders)
+            {
+				gridRows.Add(new PurchaseOrderGridRow()
 				{
-					MessageBox.Show("Unable to get tracking status", "Error");
-					return;
-				}
+					ConfirmationNumber = purchaseOrder.ConfirmationNumber,
+					TrackingNumber = purchaseOrder.TrackingNumber
+				});
+            }
+			using (var multiplePOForm = new MultiplePurchaseOrderTrackingForm
+				(gridRows,
+				MaximumNumberOfOrderTrackingConcurrentRequests,
+				catalog,
+				CanPurchaseOrderRequestTracking,
+				IsRequestOrderTrackingResponseOK)
+				)
+            {
+				multiplePOForm.ShowDialog();
+			}
+				
+		}
 
-				if (details.ExternalTrackingUrl.Scheme != "http" && details.ExternalTrackingUrl.Scheme != "https")
-				{
-					MessageBox.Show("Unsupported URL: " + details.ExternalTrackingUrl, "Error");
-					return;
-				}
+		/// <summary>
+		/// Check if purchase order is able to request tracking for itself
+		/// </summary>
+		/// <param name="purchaseOrder"></param>
+		/// <returns></returns>
+		private ValidationResponse CanPurchaseOrderRequestTracking(PurchaseOrder purchaseOrder)
+        {
+			var errorSb = new StringBuilder();
+			if (string.IsNullOrWhiteSpace(purchaseOrder.TrackingNumber))
+			{
+				errorSb.AppendLine("Order Has No Tracking #");
+			}
 
-				if (MessageBox.Show($"Status: {details.StatusDisplay}\r\nURL: {details.ExternalTrackingUrl}\r\n\r\nOpen URL?", "Order Tracking", MessageBoxButtons.YesNo) == DialogResult.Yes)
-				{
-					Process.Start(details.ExternalTrackingUrl.ToString());
-				}
-			}
-			catch (OperationCanceledException)
+			return new ValidationResponse(errorSb.ToString());
+		}
+
+		/// <summary>
+		/// Validates tracking order response
+		/// </summary>
+		/// <param name="response"></param>
+		/// <returns></returns>
+		private ValidationResponse IsRequestOrderTrackingResponseOK(TrackingResponse response)
+        {
+			if (response == null)
 			{
+				return new ValidationResponse("No data received.");
 			}
-			catch (Exception exception)
+
+			var errorSb = new StringBuilder();
+
+			var validUriSchemes = new HashSet<string>()
 			{
-				MessageBox.Show(exception.Message);
-			}
+				"http",
+				"https"
+			};
+			if (!validUriSchemes.Contains(response.ExternalTrackingUrl?.Scheme))
+            {
+				errorSb.AppendLine($"Unsupported URL: {response?.ExternalTrackingUrl?.AbsoluteUri}");
+				errorSb.AppendLine($"-> Must be of one of these schemes: {string.Join(", ", validUriSchemes)}");
+            }
+
+			return new ValidationResponse(errorSb.ToString());
 		}
 	}
 
