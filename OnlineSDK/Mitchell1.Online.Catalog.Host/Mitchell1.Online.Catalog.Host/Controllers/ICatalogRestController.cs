@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Mitchell1.Catalog.Framework.Interfaces;
@@ -10,7 +11,7 @@ namespace Mitchell1.Online.Catalog.Host.Controllers
 	{
 		bool PriceCheck(IHostData hostData, IVendor vendor, IExtendedPriceCheck priceCheck, IVehicle vehicle);
 
-		bool OrderParts(IHostData hostData, IVendor vendor, IExtendedOrder order, IVehicle vehicle);
+		OrderPartsResponse OrderParts(IHostData hostData, IVendor vendor, IExtendedOrder order, IVehicle vehicle);
 
 		Task<TrackingResponse> GetOrderTracking(IHostData hostData, IVendor vendor, string orderTrackingNumber, CancellationToken cancellationToken);
 	}

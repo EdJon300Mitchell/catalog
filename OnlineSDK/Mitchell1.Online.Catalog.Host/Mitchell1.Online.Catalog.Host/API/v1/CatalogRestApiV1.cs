@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -11,6 +12,7 @@ using Mitchell1.Catalog.Framework.Common;
 using Mitchell1.Catalog.Framework.Interfaces;
 using Mitchell1.Online.Catalog.Host.Controllers;
 using Mitchell1.Online.Catalog.Host.TransferObjects;
+using Newtonsoft.Json.Linq;
 using static Mitchell1.Online.Catalog.Host.API.v1.ParseHelper;
 
 namespace Mitchell1.Online.Catalog.Host.API.v1
@@ -166,14 +168,24 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
 			return true;
 		}
 
-		public bool OrderParts(IHostData hostData, IVendor vendor, IExtendedOrder order, IVehicle vehicle)
+		/// <summary>
+		/// For use with catalogs that can return single or multiple purchase orders for a single request order
+		/// </summary>
+		public OrderPartsResponse OrderParts(IHostData hostData, IVendor vendor, IExtendedOrder order, IVehicle vehicle)
 		{
 			if (order?.Parts == null || order.Parts.Count == 0)
 			{
 				throw new ArgumentException(nameof(order));
 			}
 
-			var url = GetUrl(CatalogApiPart.PartsOrder);
+			bool useMultiplePurchaseOrdersEndpoint = onlineCatalogInformation.SupportsMultiplePurchaseOrders && string.IsNullOrEmpty(order.PurchaseOrderNumber);
+			if (!useMultiplePurchaseOrdersEndpoint)
+			{
+				order.PurchaseOrderNumber += !string.IsNullOrWhiteSpace(order.ReferenceInvoiceNumber) ? $"-{order.ReferenceInvoiceNumber}" : "";
+				order.ReferenceInvoiceNumber = null;
+			}
+
+			var url = GetUrl(useMultiplePurchaseOrdersEndpoint ? CatalogApiPart.PartsOrderV2 : CatalogApiPart.PartsOrder);
 
 			var json = Json.SerializeObject(new OrderRequest
 			{
@@ -187,54 +199,47 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
 
 			string response = CallRemoteApiInteractive(url, json, LogOrderPartsResponse, "Order");
 
-			return UpdateOrder(response, order);
+			if (!string.IsNullOrWhiteSpace(response))
+            {
+				return useMultiplePurchaseOrdersEndpoint
+				? Json.DeserializeObject<OrderPartsResponse>(response)
+				: MapV1OrderResponseToV2(response);
+			}
+			return new OrderPartsResponse()
+			{
+				PurchaseOrders = new List<PurchaseOrder>()
+			};
 		}
-        
-        public static bool UpdateOrder(string responseRaw, IExtendedOrder order)
+
+		private OrderPartsResponse MapV1OrderResponseToV2(string orderResponseString)
         {
-	        if (responseRaw == null) return false;
+			var orderPartsResponse = new OrderPartsResponse();
+			orderPartsResponse.PurchaseOrders = new List<PurchaseOrder>();
+			if (string.IsNullOrWhiteSpace(orderResponseString))
+				return orderPartsResponse;
 
-	        var response = Json.DeserializeObject<OrderResponse>(responseRaw);
+			try
+			{
+				var orderResponse = Json.DeserializeObject<OrderResponse>(orderResponseString);
+				if (orderResponse != null)
+				{
+					orderPartsResponse.AbsoluteRedirectUrl = orderResponse.AbsoluteRedirectUrl;
+					orderPartsResponse.PurchaseOrders.Add(new PurchaseOrder()
+					{
+						ConfirmationNumber = orderResponse.ConfirmationNumber,
+						TrackingNumber = orderResponse.TrackingNumber,
+						Parts = orderResponse.Parts
+					});
+				}
+			}
+            catch (Exception)
+            {
+				//nothing
+			}
+			return orderPartsResponse;
+		}
 
-	        var parts = response.Parts;
-
-	        if (parts == null || parts.Count != order.Parts.Count)
-		        throw new CatalogException("Catalog did not return the parts we sent it - size mismatch or no parts returned.");
-
-	        var confirmationNumber = response.ConfirmationNumber;
-	        if (string.IsNullOrWhiteSpace(confirmationNumber))
-		        throw new CatalogException("Order was not successful");
-
-	        order.ConfirmationNumber = confirmationNumber;
-	        order.TrackingNumber = response.TrackingNumber;
-
-	        for (int i = 0; i < parts.Count; ++i)
-	        {
-		        var localPart = order.Parts[i];
-		        var remotePart = parts[i];
-
-		        localPart.ManufacturerLineCode = remotePart.ManufacturerLineCode;
-		        localPart.PartNumber = remotePart.PartNumber;
-		        localPart.QuantityRequested = ToDecimal(remotePart.QuantityRequested);
-		        localPart.QuantityOrdered = ToDecimal(remotePart.QuantityOrdered);
-		        localPart.UnitCore = ToDecimal(remotePart.UnitCore);
-		        localPart.UnitList = ToDecimal(remotePart.UnitList);
-		        localPart.UnitCost = ToDecimal(remotePart.UnitCost);
-		        localPart.Status = remotePart.Status;
-		        localPart.QuantityAvailable = ToDecimal(remotePart.QuantityAvailable);
-		        localPart.Found = remotePart.Found;
-		        localPart.LocationId = remotePart.LocationId;
-		        localPart.LocationName = remotePart.LocationName;
-		        localPart.SupplierName = remotePart.SupplierName;
-		        localPart.Metadata = remotePart.Metadata;
-		        localPart.ShippingDescription = remotePart.ShippingDescription;
-		        localPart.ShippingCost = ToDecimal(remotePart.ShippingCost);
-	        }
-
-	        return true;
-        }
-
-	    public async Task<TrackingResponse> GetOrderTracking(IHostData hostData, IVendor vendor, string orderTrackingNumber, CancellationToken cancellationToken)
+		public async Task<TrackingResponse> GetOrderTracking(IHostData hostData, IVendor vendor, string orderTrackingNumber, CancellationToken cancellationToken)
 	    {
 		    var url = GetUrl(CatalogApiPart.OrderTracking);
 
@@ -335,7 +340,10 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
 				=> await CallRemoteApiRaw(HttpMethod.Post, url, json, "application/json", logging, token), taskName);
 			try
 			{
-				string redirectUrl = Json.DeserializeObject<dynamic>(responseRaw)?.AbsoluteRedirectUrl;
+				var webResponseObject = Json.DeserializeObject<dynamic>(responseRaw);
+				//Don't want a RuntimeBinderException if JSON is not an object; e.g. array
+				var redirectUrl = webResponseObject is JObject ? (string) webResponseObject.AbsoluteRedirectUrl : null;
+
 				if (redirectUrl != null)
 				{
 					var catalogController = new PartsView(redirectUrl);
@@ -456,8 +464,9 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
 		private static Order ToOrder(IExtendedOrder order) =>
 			new Order
 			{
-				Parts = order.Parts.Select(part => new OrderPart
+				Parts = order.Parts.Select((part, i) => new OrderPart
 				{
+					Index = i,
 					Description = part.Description,
 					Found = part.Found,
 					LocationId = part.LocationId,
@@ -479,7 +488,8 @@ namespace Mitchell1.Online.Catalog.Host.API.v1
 				}).ToList(),
 				DeliveryOption = order.DeliveryOption,
 				OrderMessage = order.OrderMessage,
-				PurchaseOrderNumber = order.PurchaseOrderNumber
+				PurchaseOrderNumber = order.PurchaseOrderNumber,
+				ReferenceInvoiceNumber = order.ReferenceInvoiceNumber
 			};
     }
 }

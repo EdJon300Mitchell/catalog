@@ -58,6 +58,8 @@ namespace Mitchell1.Online.Catalog.Host
 
         public bool SupportsPriceCheck => onlineCatalogInformation.SupportsPriceCheck;
 
+        public bool SupportsMultiplePurchaseOrders => onlineCatalogInformation.SupportsMultiplePurchaseOrders;
+
 		public bool GoShopping(out ShoppingCart cart)
 		{
 			var catalogController = OnlineCatalogCommunicationFactory.GetEmbeddedCatalogTransferController(onlineCatalogInformation, vendor, hostData, vehicle);
@@ -84,11 +86,11 @@ namespace Mitchell1.Online.Catalog.Host
 			}
         }
 
-		public bool OrderParts(IExtendedOrder order)
+		public OrderPartsResponse OrderParts(IExtendedOrder order)
 		{
 			using (var controller = OnlineCatalogCommunicationFactory.GetRestApiController(onlineCatalogInformation, logger, newCatalogHostingForm))
 			{
-				return controller.OrderParts(hostData, vendor, order, vehicle);
+                return controller.OrderParts(hostData, vendor, order, vehicle);
 			}
 		}
 

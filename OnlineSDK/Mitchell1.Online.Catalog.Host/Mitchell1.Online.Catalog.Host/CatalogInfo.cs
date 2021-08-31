@@ -5,20 +5,15 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Mitchell1.Catalog.Framework.Interfaces;
 
-
 namespace Mitchell1.Online.Catalog.Host
 {
 	public interface IOnlineCatalogInfo : ICatalogInfo
 	{
-		Task LoadOnlineCatalogInformation(OnlineCatalogInformation catalog, CancellationToken cancellationToken);
-
 		IOnlineCatalog GetOnlineCatalog(IVendor vendor, IVehicle vehicle, IHostData hostData);
 
 		OnlineCatalogInformation OnlineCatalogInformation { get; }
@@ -28,28 +23,34 @@ namespace Mitchell1.Online.Catalog.Host
 	{
 		private readonly NewCatalogHostingForm newCatalogHostingForm;
 
-		public CatalogInfo(NewCatalogHostingForm newCatalogHostingForm = null)
+		internal CatalogInfo(NewCatalogHostingForm newCatalogHostingForm, OnlineCatalogInformation onlineCatalogInformation)
 		{
-			this.newCatalogHostingForm = newCatalogHostingForm ?? CatalogHostingForm.New;
-			OnlineCatalogInformation = new OnlineCatalogInformation();
+			this.newCatalogHostingForm = newCatalogHostingForm;
+			OnlineCatalogInformation = onlineCatalogInformation;
 		}
 
-        public async Task LoadOnlineCatalogInformation(OnlineCatalogInformation catalog, CancellationToken cancellationToken)
+		public static async Task<CatalogInfo> NewCatalogInfoAsync(OnlineCatalogInformation onlineCatalogInformation)
+		{
+			var catalogInfo = new CatalogInfo(CatalogHostingForm.New, onlineCatalogInformation ?? throw new ArgumentNullException(nameof(onlineCatalogInformation)));
+			await catalogInfo.LoadOnlineCatalogInformation(onlineCatalogInformation);
+			return catalogInfo;
+		}
+
+		private async Task LoadOnlineCatalogInformation(OnlineCatalogInformation onlineCatalogInformation)
         {
-	        OnlineCatalogInformation = catalog ?? throw new ArgumentNullException(nameof(catalog));
             ImageDown = null;
             ImageUp = null;
        
             try
             {
-                var image = FindCachedImage(catalog, false);
+                var image = FindCachedImage(onlineCatalogInformation, false);
                 if (image == null && !string.IsNullOrEmpty(OnlineCatalogInformation[CatalogApiPart.Icon]))
                 {
-                    image = await LoadBitmapUrl(new Size(58, 28), cancellationToken);
+                    image = await LoadBitmapUrl(new Size(58, 28));
                 }
                 if (image == null)
                 { 
-                    image = FindCachedImage(catalog, true);
+                    image = FindCachedImage(onlineCatalogInformation, true);
                 }
                 if (image != null)
                 { 
@@ -58,13 +59,13 @@ namespace Mitchell1.Online.Catalog.Host
                 }
                 else
                 {
-                    Trace.WriteLine("Could not load icon for " + catalog.DisplayName + ": Not available online or in cache");
+                    Trace.WriteLine("Could not load icon for " + onlineCatalogInformation.DisplayName + ": Not available online or in cache");
                 }
             }
             catch (Exception e)
             {
                 // try loading the stale cache image
-                var image = FindCachedImage(catalog, true);
+                var image = FindCachedImage(onlineCatalogInformation, true);
                 if (image != null)
                 {
                     ImageDown = new Bitmap(image);
@@ -88,11 +89,9 @@ namespace Mitchell1.Online.Catalog.Host
                     iconDirectory = Path.Combine(programData, "M1-SK", "CatalogIcons");
                     if (!Directory.Exists(iconDirectory))
                     {
-                        DirectorySecurity securityRules = new DirectorySecurity();
-                        securityRules.AddAccessRule(new FileSystemAccessRule("Users", FileSystemRights.Modify, AccessControlType.Allow));
                         try
                         {
-                            Directory.CreateDirectory(iconDirectory, securityRules);
+                            Directory.CreateDirectory(iconDirectory);
                         }
                         catch (Exception ex)
                         {
@@ -207,7 +206,7 @@ namespace Mitchell1.Online.Catalog.Host
             return null;
         }
 
-        public async Task<Image> LoadBitmapUrl(Size requestedSize, CancellationToken cancellationToken)
+        private async Task<Image> LoadBitmapUrl(Size requestedSize)
         {
             if (OnlineCatalogInformation == null || string.IsNullOrEmpty(OnlineCatalogInformation.ApiBaseUrl))
             {
@@ -227,20 +226,17 @@ namespace Mitchell1.Online.Catalog.Host
             }
         }
 
-		public OnlineCatalogInformation OnlineCatalogInformation { get; private set; }
+		public OnlineCatalogInformation OnlineCatalogInformation { get; }
 
 		public string DisplayName => OnlineCatalogInformation.DisplayName;
         public string Description => OnlineCatalogInformation.Description;
-        public Bitmap ImageDown { get; set; }
-        public Bitmap ImageUp { get; set; }
+        public Bitmap ImageDown { get; private set; }
+        public Bitmap ImageUp { get; private set; }
 
 	    ICatalog ICatalogInfo.GetCatalog(IVendor vendor, IVehicle vehicle, IHostData hostData)
 		    => throw new NotImplementedException($"This method is deprecated - use {nameof(IOnlineCatalogInfo)}.{nameof(GetOnlineCatalog)}");
 
-		public IOnlineCatalog GetOnlineCatalog(IVendor vendor, IVehicle vehicle, IHostData hostData)
-	    {
-		    return new OnlineCatalog(OnlineCatalogInformation, vendor, vehicle, hostData);
-	    }
+		public IOnlineCatalog GetOnlineCatalog(IVendor vendor, IVehicle vehicle, IHostData hostData) => new OnlineCatalog(OnlineCatalogInformation, vendor, vehicle, hostData);
 
 		public bool VendorSetup(IVendor vendor, IHostData hostData)
 		{

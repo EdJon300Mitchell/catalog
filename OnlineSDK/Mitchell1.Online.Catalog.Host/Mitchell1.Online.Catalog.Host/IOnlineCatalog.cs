@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Mitchell1.Online.Catalog.Host.API;
 using Mitchell1.Online.Catalog.Host.TransferObjects;
@@ -48,6 +49,6 @@ namespace Mitchell1.Online.Catalog.Host
 		/// </summary>
 		/// <param name="order"></param>
 		/// <returns>true if successful. otherwise, false</returns>
-		bool OrderParts(IExtendedOrder order);
+		OrderPartsResponse OrderParts(IExtendedOrder order);
 	}
 }

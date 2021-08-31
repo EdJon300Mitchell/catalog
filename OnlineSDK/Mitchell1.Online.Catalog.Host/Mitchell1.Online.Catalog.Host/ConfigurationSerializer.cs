@@ -35,8 +35,9 @@ namespace Mitchell1.Online.Catalog.Host
             catalog.ShowsDeliverWillCall = (bool)element.Attribute("ShowsDeliverWillCall");
             catalog.SupportUrl = element.Attribute("SupportUrl")?.Value ?? "";
             catalog.SupportPhone = element.Attribute("SupportPhone")?.Value ?? "";
+            catalog.SupportsMultiplePurchaseOrders = (bool?)element.Attribute(nameof(ICatalogProperties.SupportsMultiplePurchaseOrders)) ?? false;
 
-	        var expectedPrefix = "CatalogApiPart.";
+            var expectedPrefix = "CatalogApiPart.";
 	        var attributes = element.Attributes().Where(a => a.Name.LocalName.StartsWith(expectedPrefix)).ToList();
 	        foreach (var a in attributes)
 	        {
@@ -82,7 +83,8 @@ namespace Mitchell1.Online.Catalog.Host
                     new XAttribute("SupportsPriceCheck", catalog.SupportsPriceCheck),
                     new XAttribute("ShowsDeliverWillCall", catalog.ShowsDeliverWillCall),
                     new XAttribute("SupportUrl", catalog.SupportUrl),
-                    new XAttribute("SupportPhone", catalog.SupportPhone)
+                    new XAttribute("SupportPhone", catalog.SupportPhone),
+                    new XAttribute(nameof(ICatalogProperties.SupportsMultiplePurchaseOrders), catalog.SupportsMultiplePurchaseOrders)
                 );
         }
 

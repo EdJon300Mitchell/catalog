@@ -31,8 +31,7 @@ namespace Mitchell1.Online.Catalog.Host.Test
         [TestMethod]
         public async Task CatalogSetupTest()
         {
-            CatalogInfo info = new CatalogInfo();
-            await info.LoadOnlineCatalogInformation(onlineCatalogInformation, CancellationToken.None);
+            CatalogInfo info = await CatalogInfo.NewCatalogInfoAsync(onlineCatalogInformation);
 
             Assert.IsNotNull(info.DisplayName);
             Assert.IsNotNull(info.Description);
@@ -48,7 +47,7 @@ namespace Mitchell1.Online.Catalog.Host.Test
         [TestMethod, Ignore]
         public void FindCachedImageTest()
         {
-            CatalogInfo info = new CatalogInfo();
+            CatalogInfo info = new CatalogInfo(CatalogHostingForm.New, new OnlineCatalogInformation());
 
             string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string path = Path.Combine(programData, "M1-SK", "CatalogIcons");
@@ -105,7 +104,7 @@ namespace Mitchell1.Online.Catalog.Host.Test
         [TestMethod, Ignore]
         public void CacheImageTest()
         {
-            CatalogInfo info = new CatalogInfo();
+            CatalogInfo info = new CatalogInfo(CatalogHostingForm.New, new OnlineCatalogInformation());
 
             string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string path = Path.Combine(programData, "M1-SK", "CatalogIcons");
@@ -128,7 +127,7 @@ namespace Mitchell1.Online.Catalog.Host.Test
         [TestMethod, Ignore]
         public void ClearOldImageTest()
         {
-            CatalogInfo info = new CatalogInfo();
+            CatalogInfo info = new CatalogInfo(CatalogHostingForm.New, new OnlineCatalogInformation());
 
             string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string path = Path.Combine(programData, "M1-SK", "CatalogIcons");

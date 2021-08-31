@@ -22,7 +22,9 @@ namespace Mitchell1.Online.Catalog.Host
 		/// <summary>
 		/// Purchase Order Number as determined by host application.
 		/// </summary>
-		string PurchaseOrderNumber { get; }
+		string PurchaseOrderNumber { get; set; }
+
+		string ReferenceInvoiceNumber { get; set; }
 
 		string TrackingNumber { get; set; }
 

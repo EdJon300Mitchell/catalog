@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Mitchell1.Catalog.Framework.Interfaces;
+#pragma warning disable 1591
 
 namespace Mitchell1.Online.Catalog.Host
 {
@@ -8,8 +9,7 @@ namespace Mitchell1.Online.Catalog.Host
     {
         private readonly Dictionary<CatalogApiPart, string> urlParts = new Dictionary<CatalogApiPart, string>();
 
-        public static int HostApiLevel { get; } = 3;
-
+        public const int HostApiLevel = 4;
         public string DisplayName { get; set; }
         public string Description { get; set; }
         public string Identifier { get; set; }
@@ -46,7 +46,6 @@ namespace Mitchell1.Online.Catalog.Host
 		    return urlParts.Keys.ToList();
 	    }
 
-		// Catalog API Methods
 		public bool ShowsDeliverWillCall { get; set; }
 		public bool AllowsBlankManufacturerCode { get; set; }
 		public bool AllowsNotFoundPartsToBeOrdered { get; set; }
@@ -56,10 +55,9 @@ namespace Mitchell1.Online.Catalog.Host
 		public bool SupportsLocation { get; set; }
 		public bool SupportsOrderMessage { get; set; }
 		public bool SupportsPriceCheck { get; set; }
-
-		// Additional Items specific to online
 		public string SupportUrl { get; set; }
         public string SupportPhone { get; set; }
+        public bool SupportsMultiplePurchaseOrders { get; set; }
     }
 
     public enum CatalogApiPart
@@ -69,6 +67,7 @@ namespace Mitchell1.Online.Catalog.Host
         GoShopping,
         PriceCheck,
         PartsOrder,
-		OrderTracking
+		OrderTracking,
+        PartsOrderV2
     }
 }
