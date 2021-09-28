@@ -66,6 +66,7 @@
 			this.label5 = new System.Windows.Forms.Label();
 			this.linkLabelConfig = new System.Windows.Forms.LinkLabel();
 			this.label6 = new System.Windows.Forms.Label();
+            this.checkBoxMultiplePOs = new System.Windows.Forms.CheckBox();
 			this.tabControl.SuspendLayout();
 			this.tabPageBasic.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.dataGridViewURLs)).BeginInit();
@@ -284,6 +285,7 @@
 			// 
 			// tabPageAdvanced
 			// 
+            this.tabPageAdvanced.Controls.Add(this.checkBoxMultiplePOs);
 			this.tabPageAdvanced.Controls.Add(this.checkBoxDeliver);
 			this.tabPageAdvanced.Controls.Add(this.checkBoxAllowsNotFoundPartsToBeOrdered);
 			this.tabPageAdvanced.Controls.Add(this.checkBoxSupportsLocation);
@@ -464,6 +466,16 @@
 			this.label6.Size = new System.Drawing.Size(304, 13);
 			this.label6.TabIndex = 6;
 			this.label6.Text = "Configure && Save Online Catalog to use test harness";
+            // 
+            // checkBoxMultiplePOs
+            // 
+            this.checkBoxMultiplePOs.AutoSize = true;
+            this.checkBoxMultiplePOs.Location = new System.Drawing.Point(332, 125);
+            this.checkBoxMultiplePOs.Name = "checkBoxMultiplePOs";
+            this.checkBoxMultiplePOs.Size = new System.Drawing.Size(180, 17);
+            this.checkBoxMultiplePOs.TabIndex = 9;
+            this.checkBoxMultiplePOs.Text = "SupportsMultiplePurchaseOrders";
+            this.checkBoxMultiplePOs.UseVisualStyleBackColor = true;
 			// 
 			// CatalogConfiguration
 			// 
@@ -527,6 +539,7 @@
 		private System.Windows.Forms.LinkLabel linkLabelConfig;
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Button buttonLoad;
+        private System.Windows.Forms.CheckBox checkBoxMultiplePOs;
 	}
 }
 
