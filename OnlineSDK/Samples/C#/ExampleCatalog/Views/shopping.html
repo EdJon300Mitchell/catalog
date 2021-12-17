@@ -1,0 +1,107 @@
+<html>
+<head>
+    <title>Go Shopping</title>
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <script type="text/javascript" src='~/Content/scripts/catalog-v3.0.0.js'></script>
+    <style>
+		textarea {
+			margin: 5px 0 5px 0;
+		} 
+    </style>
+</head>
+<body>
+	<script type="text/javascript">
+		var apiKey = 'apikey-12345-key';
+		var catalogSdk = new Catalog(apiKey, false);
+		var cart;
+
+		window.onload = function (e) {
+			// Get Vehicle info from querystring
+			var vehicle = catalogSdk.vehicle;
+
+			// Simply show the json representation
+			var vehicleOutput = document.getElementById('vehicleOutput');
+			vehicleOutput.innerHTML = JSON.stringify(vehicle, undefined, 4);
+
+			var hostData = catalogSdk.hostData;
+			var versionOutput = document.getElementById('versionOutput');
+			versionOutput.innerHTML = JSON.stringify(hostData, undefined, 4);
+
+			// Add some hard coded items to a cart array
+			var noteItem1 = catalogSdk.createNoteItem("NOTE1");
+			var noteItem2 = catalogSdk.createNoteItem("NOTE2");
+			var laborItem1 = catalogSdk.createLaborItem("LABOR1", 1.4, 240);
+			var partItem1 = catalogSdk.createPartItem('P1', "CDE", "Car Destruction Enterprise", "PART 1", 2.0, 1.0, 0, 2, false, "", "upc");
+			var partItem2 = catalogSdk.createPartItem('P2', "BFG", "Big Friendly Giant Co.", "Old Tire", 5.0, 2.50, 0, 2, true, "175", "");
+
+			// Using this newer API allows Manager to correctly assign tire/wheel parts the tire category. But can be used for any type of part as well
+			var tire = catalogSdk.createPartItem2('TIRE1', "BFG", "B. F. G.", "TIRE1", 55.88, 29.99, 10.00, 2, "S1", "", catalogSdk.PartCategory.TIRE);
+			var wheel = catalogSdk.createPartItem2('WHEEL1', "BFG", "BFG", "WHEEL1", 28, 14.0, 0, 2, "S2", "upccode", catalogSdk.PartCategory.WHEEL);
+			var partItem3 = catalogSdk.createPartItem2('P3', "BCD", "B. C. D.", "PART 3", 42.99, 81.49, 0, 2, "", "", catalogSdk.PartCategory.UNSPECIFIED, "Supplier4", "{ \"SupplierName\" : \"Sup 001\"}", "Next Day", 6);
+			var partItem4 = catalogSdk.createPartItem2('P4', "BFG", "BFG", "PART 4", 2.99, 1.49, 0, 2, "S3", "upccode", catalogSdk.PartCategory.UNSPECIFIED,
+				"Supplier ABC", "{\"Supplier\" : { \"SupplierName\" : \"Supplier ABC\", \"Coupon\" : \"NX123\" }}", "Delivered in 2 hours", 0.99);
+			var partItem5 = catalogSdk.createPartItem2('SHOWUI', "M1", "M1", "SHOWUI", 24.99, 12.0, 0, 2, "S3", "upccode", catalogSdk.PartCategory.UNSPECIFIED, "Supplier XYZ", "{\"Description\": \"Custom Metadata that is returned to the PriceCheck and/or OrderParts\"}", "Next day", 1.99);
+			var splitPartOverOrdersPartItem = catalogSdk.createPartItem2('SPARKPLUGS', 'NGK', 'NGK', 'Spark plugs', 15, 5.99, 10, 5, 'standard', 'NGK101STD', catalogSdk.PartCategory.UNSPECIFIED, 'Supplier ACME', '{\"CustomAttr\": 1}', 'Overnight', '5.99');
+
+            var orderItem1 = catalogSdk.createOrderItem("OrderMessage", "DeliveryOptions", "ConfirmationNumber1", "Tracking#");
+
+			// Previous version - no tire/wheel support
+			catalogSdk.addOrderPart(orderItem1, "3", "San Diego Three", "back ordered", "NONTIRE", "ABC", "A Big Co.", "Non Tire", 2.0, 1.0, 0, 1, 1, 1);
+
+			// Latest version with new properties (tire/wheel/other support, supplier name, shipping, metadata).
+			catalogSdk.addOrderPart2(orderItem1, "4", "Escondido", "back ordered", "TIRE2", "DEF", "Do Excel Franchise", "TIRE 2", 25.0, 15.0, 0, 1, 1, 1, "255/S/65R", catalogSdk.PartCategory.TIRE);
+			catalogSdk.addOrderPart2(orderItem1, "5", "San Diego", "back ordered", "WHEEL2", "GHI", "Go High Inc.", "WHEEL 2", 2.0, 1.0, 0, 1, 1, 1, "15in", catalogSdk.PartCategory.WHEEL);
+			catalogSdk.addOrderPart2(orderItem1, "5", "San Diego", "back ordered", "BATT455", "ABC", "A Big Co.", "Battery X", 99.0, 49.0, 10, 1, 1, 5, "", catalogSdk.PartCategory.UNSPECIFIED);
+			catalogSdk.addOrderPart2(orderItem1, "5", "San Diego", "back ordered", "WITHSHIP", "BFG", "Big Friendly Giant Co.", "WITH Shipping", 20.0, 10.0, 0, 1, 1, 1, "", catalogSdk.PartCategory.UNSPECIFIED,
+				"Sup 123", "{\"Supplier\" : { \"SupplierName\" : \"Sup 123\", \"Coupon\" : \"NX123\" }}", "1 hour delivery", 5.00);
+
+			// Previous call - with tracking omitted
+			var orderItem2 = catalogSdk.createOrderItem("OrderMessage2", "DeliveryOptions", "ConfirmationNumber2");
+			catalogSdk.addOrderPart2(orderItem2, "5", "San Diego", "back ordered", "TIRE2", "BFG", "BFG", "TIRE2", 1.0, 2.0, 0, 1, 1, 1, "255/S/65R", catalogSdk.PartCategory.TIRE);
+
+			cart = [
+				noteItem1,
+				noteItem2,
+				laborItem1,
+				partItem1,
+				partItem2,
+				tire,
+				wheel,
+				partItem3,
+				partItem4,
+				partItem5,
+				orderItem1,
+				orderItem2,
+				splitPartOverOrdersPartItem
+			];
+
+			populateOutputJson(cart);
+		}
+
+		function TransferClicked() {
+			// Cart would be converted from any internal catalog representation to part/note/labor/order (with parts) at this point and transferred back to caller
+			// In this example, cart is created above and the JSON can be modified before transferring.
+			catalogSdk.transfer(document.getElementById('outputJson').value);
+		}
+
+		function CancelClicked() {
+			catalogSdk.cancelRequest();
+		}
+
+		function populateOutputJson(cart) {
+			var outputJsonTextArea = document.getElementById('outputJson');
+			outputJsonTextArea.innerHTML = JSON.stringify(cart, undefined, 4);
+		}
+	</script>
+	<h2>Go Shopping:</h2>
+	<input type='button' onclick='CancelClicked();' value='Close' />
+	<input type='button' onclick='TransferClicked();' value='Transfer' />
+	Cart Contains:
+	<textarea id="outputJson" style="width: 100%; height: 65%; padding:0.5em 0.5em"></textarea>
+	Vehicle:
+	<textarea readonly id="vehicleOutput" style="width: 100%; height: 15%; padding: 0.5em 0.5em"></textarea>
+	Manager SE Version:
+	<textarea readonly id="versionOutput" style="width: 100%; height: 8%; padding: 0.5em 0.5em"></textarea>
+    </body>
+</html>

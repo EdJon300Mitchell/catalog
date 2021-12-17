@@ -1,0 +1,31 @@
+﻿CREATE TABLE orders (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	ordered_date INTEGER NOT NULL,
+	manager_po TEXT NULL,
+	customer_id INTEGER NOT NULL,
+	vehicle_json TEXT NULL
+);
+
+CREATE TABLE order_tracking (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	order_id INTEGER NOT NULL,
+	expected_arrival_date INTEGER NOT NULL
+);
+
+CREATE TABLE price_check_session (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,	
+	json TEXT NULL
+);
+
+CREATE TABLE order_parts_session (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,	 	
+	json TEXT NULL
+);
+
+
+-- Add some fake starting points
+INSERT INTO orders (id, ordered_date, manager_po, customer_id, vehicle_json) VALUES (54000, 0, '', -1, NULL);
+INSERT INTO order_tracking (id, order_id, expected_arrival_date) VALUES (89000, -1, 0);
+INSERT INTO price_check_session (id, json) VALUES (25000, NULL);
+INSERT INTO order_parts_session (id, json) VALUES (26000, NULL);
+

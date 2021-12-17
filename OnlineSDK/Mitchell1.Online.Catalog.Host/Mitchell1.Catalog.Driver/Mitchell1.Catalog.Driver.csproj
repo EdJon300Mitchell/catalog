@@ -1,0 +1,251 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{15DD524C-06B8-484D-A2F5-389B9E9B9253}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Mitchell1.Catalog.Driver</RootNamespace>
+    <AssemblyName>Mitchell1.Catalog.Driver.Online</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <ApplicationIcon>Resources\Mitchell1.ico</ApplicationIcon>
+    <PublishUrl>http://localhost/Mitchell1.Catalog.Driver/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+	<ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mitchell1.Browser.Interfaces">
+      <HintPath>..\..\..\bin\Browser\Mitchell1.Browser.Interfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Mitchell1.Catalog.Framework.Common, Version=2.0.0.0, Culture=neutral, PublicKeyToken=be9225e5145f4774, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\bin\Mitchell1.Catalog.Framework.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Mitchell1.Catalog.Framework.Interfaces, Version=2.0.0.0, Culture=neutral, PublicKeyToken=be9225e5145f4774, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\bin\Mitchell1.Catalog.Framework.Interfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Browser\BrowserHtmlTests.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Browser\BrowserHtmlTests.Designer.cs">
+      <DependentUpon>BrowserHtmlTests.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Browser\SampleBrowser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Browser\SampleBrowser.Designer.cs">
+      <DependentUpon>SampleBrowser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CatalogDriver.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CatalogDriver.Designer.cs">
+      <DependentUpon>CatalogDriver.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GoShoppingCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\GoShoppingCtrl.Designer.cs">
+      <DependentUpon>GoShoppingCtrl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\CatalogConfiguration.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\CatalogConfiguration.Designer.cs">
+      <DependentUpon>CatalogConfiguration.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PriceCheckCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\PriceCheckCtrl.Designer.cs">
+      <DependentUpon>PriceCheckCtrl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\VehicleSetupCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\VehicleSetupCtrl.Designer.cs">
+      <DependentUpon>VehicleSetupCtrl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\VendorHelper.cs" />
+    <Compile Include="Controls\VendorSetupCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\VendorSetupCtrl.Designer.cs">
+      <DependentUpon>VendorSetupCtrl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Data\DriverData.cs" />
+    <Compile Include="Forms\MultiplePurchaseOrderTrackingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MultiplePurchaseOrderTrackingForm.Designer.cs">
+      <DependentUpon>MultiplePurchaseOrderTrackingForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\ExternalCatalogAdapterErrorHandler.cs" />
+    <Compile Include="Helpers\HostData.cs" />
+    <Compile Include="Helpers\Order.cs" />
+    <Compile Include="Helpers\Part.cs" />
+    <Compile Include="Helpers\PriceCheck.cs" />
+    <Compile Include="Helpers\PriceCheckAlternatePart.cs" />
+    <Compile Include="Helpers\Vehicle.cs" />
+    <Compile Include="Helpers\Vendor.cs" />
+    <Compile Include="Models\PurchaseOrderGridRow.cs" />
+    <Compile Include="Models\ValidationResponse.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Browser\BrowserHtmlTests.resx">
+      <DependentUpon>BrowserHtmlTests.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Browser\SampleBrowser.resx">
+      <DependentUpon>SampleBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CatalogDriver.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>CatalogDriver.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GoShoppingCtrl.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GoShoppingCtrl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\CatalogConfiguration.resx">
+      <DependentUpon>CatalogConfiguration.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\PriceCheckCtrl.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>PriceCheckCtrl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\VehicleSetupCtrl.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>VehicleSetupCtrl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\VendorSetupCtrl.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>VendorSetupCtrl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\MultiplePurchaseOrderTrackingForm.resx">
+      <DependentUpon>MultiplePurchaseOrderTrackingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\DriverData.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Mitchell1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+	  <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mitchell1.Online.Catalog.Host\Mitchell1.Online.Catalog.Host.csproj">
+      <Project>{227DD0EA-A370-41EC-B4A2-5656BD4483CF}</Project>
+      <Name>Mitchell1.Online.Catalog.Host</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
