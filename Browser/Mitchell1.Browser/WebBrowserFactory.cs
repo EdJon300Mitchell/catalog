@@ -6,7 +6,7 @@ namespace Mitchell1.Browser
 	/// <summary>
 	/// Single Instance Management of Browser. Use helper methods here to create controls
 	/// </summary>
-	internal static class WebBrowserFactory
+	public static class WebBrowserFactory
 	{
 		private static readonly CefBrowserSupport cefBrowserSupport = new CefBrowserSupport();
 

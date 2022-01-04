@@ -35,7 +35,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>..\..\SDK\Mitchell1.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\OnlineCatalogKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -71,8 +71,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\SDK\Mitchell1.snk">
-      <Link>Mitchell1.snk</Link>
+    <None Include="..\..\OnlineCatalogKey.snk">
+      <Link>OnlineCatalogKey.snk</Link>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

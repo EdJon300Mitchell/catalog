@@ -23,7 +23,7 @@ namespace Mitchell1.Online.Catalog.Host
 	{
 		private readonly NewCatalogHostingForm newCatalogHostingForm;
 
-		internal CatalogInfo(NewCatalogHostingForm newCatalogHostingForm, OnlineCatalogInformation onlineCatalogInformation)
+		public CatalogInfo(NewCatalogHostingForm newCatalogHostingForm, OnlineCatalogInformation onlineCatalogInformation)
 		{
 			this.newCatalogHostingForm = newCatalogHostingForm;
 			OnlineCatalogInformation = onlineCatalogInformation;
